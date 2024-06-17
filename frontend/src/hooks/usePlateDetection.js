@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-export default function usePlateDetection() {
+const usePlateDetection = () => {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -24,13 +24,17 @@ export default function usePlateDetection() {
         }
       );
       setResult(response.data);
+      return response.data;
     } catch (error) {
       console.error("Error uploading file:", error);
       setError("Error detecting plate");
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
   return { result, detectPlate, loading, error };
-}
+};
+
+export default usePlateDetection;
