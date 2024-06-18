@@ -1,35 +1,30 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
-export default function Header() {
-  const [activeSection, setActiveSection] = useState("");
-
+export default function Header({ hoveredSection, setHoveredSection }) {
   const navigate = useNavigate();
 
   return (
-    <header className="w-full bg-blue-950">
-      <div className="w-full flex justify-between p-4 text-white">
+    <header className="w-full bg-slate-950">
+      <div className="w-full flex justify-evenly p-4 text-gray-400 text-lg">
         <button
-          className={`text-lg hover:text-gray-300 ${
-            activeSection === "with-image" ? "text-gray-300" : ""
-          }`}
-          onClick={() =>
-            navigate("/with-image") || setActiveSection("with-image")
-          }
+          className={`${hoveredSection === "image" ? "text-white" : ""}`}
+          onClick={() => navigate("/with-image")}
+          onMouseEnter={() => setHoveredSection("image")}
+          onMouseLeave={() => setHoveredSection("")}
         >
           Detect with Image
         </button>
         <button
-          className="text-center font-bold text-2xl hover:text-gray-300"
-          onClick={() => navigate("/") || setActiveSection("")}
+          className="text-center font-bold text-2xl text-white hover:text-gray-300"
+          onClick={() => navigate("/")}
         >
           Vehicle Plate Detector
         </button>
         <button
-          className={`text-lg hover:text-gray-300 ${
-            activeSection === "with-cam" ? "text-gray-300" : ""
-          }`}
-          onClick={() => navigate("/with-cam") || setActiveSection("with-cam")}
+          className={`${hoveredSection === "cam" ? "text-white" : ""}`}
+          onClick={() => navigate("/with-cam")}
+          onMouseEnter={() => setHoveredSection("cam")}
+          onMouseLeave={() => setHoveredSection("")}
         >
           Detect with Cam
         </button>
