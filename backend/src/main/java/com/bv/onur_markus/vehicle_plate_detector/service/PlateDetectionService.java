@@ -12,7 +12,6 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +30,6 @@ public class PlateDetectionService {
 
     private final ArrayList<CascadeClassifier> plateCascades = new ArrayList<>();
     private final ITesseract tesseract;
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlateDetectionService.class);
 
     public PlateDetectionService() {
         this.plateCascades.add(new CascadeClassifier("src/main/resources/haarcascades/haarcascade_russian_plate_number.xml"));
@@ -67,10 +65,6 @@ public class PlateDetectionService {
             for (Rect rect : detectedPlates) {
                 count++;
 
-                // Draw rectangle around detected plate
-                Imgproc.rectangle(src, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
-                Imgcodecs.imwrite(String.format("src/main/resources/detected_plate_%s.bmp", count), src);
-
                 // Crop and save the detected plate
                 Mat plate = new Mat(gray, rect);
                 String platePath = String.format("src/main/resources/temp_plate_%s.bmp", count);
@@ -84,9 +78,7 @@ public class PlateDetectionService {
 
             return String.join("\n", ocrResults);
 
-
         } catch (IOException | TesseractException e) {
-            LOGGER.error("Error detecting plate", e);
             return "Error detecting plate";
         }
     }

@@ -15,7 +15,7 @@ export default function Header({ hoveredSection, setHoveredSection }) {
           Detect with Image
         </button>
         <button
-          className="text-center font-bold text-2xl text-white hover:text-gray-300"
+          className="text-center font-bold text-2xl text-white underline"
           onClick={() => navigate("/")}
         >
           Vehicle Plate Detector

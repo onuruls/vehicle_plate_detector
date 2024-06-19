@@ -1,18 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import usePlateDetection from "../hooks/usePlateDetection";
+import useCityCodes from "../hooks/useCityCodes";
 
 export default function ImageDetector() {
   const [file, setFile] = useState(null);
+  const [cityNameInput, setCityNameInput] = useState("");
   const { result, detectPlate, loading, error } = usePlateDetection();
+  const {
+    cityName,
+    getCityNameByCode,
+    addCityName,
+    loading: cityLoading,
+    error: cityError,
+  } = useCityCodes();
+
+  useEffect(() => {
+    if (result) {
+      const code = result.split(" ")[0];
+      if (code) {
+        getCityNameByCode(code);
+      }
+    }
+  }, [result]);
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (file) {
-      detectPlate(file);
+      const detectionResult = await detectPlate(file);
+      if (detectionResult && detectionResult.result) {
+        const code = detectionResult.result.split(" ")[0];
+        getCityNameByCode(code);
+      }
+    }
+  };
+
+  const handleCityNameSubmit = async () => {
+    if (cityNameInput.trim()) {
+      const newCity = {
+        code: result.split(" ")[0],
+        city: cityNameInput.trim(),
+      };
+      await addCityName(newCity);
+      setCityNameInput("");
+      getCityNameByCode(newCity.code);
     }
   };
 
@@ -45,18 +79,26 @@ export default function ImageDetector() {
               Detection Result:
             </h2>
             <p className="text-lg">{result}</p>
-            {!result.city && (
+            {!cityLoading && cityName && (
+              <div className="mt-4">
+                <p className="text-green-500">City: {cityName.city}</p>
+              </div>
+            )}
+            {!cityLoading && !cityName && (
               <div className="mt-4">
                 <p className="text-red-500">
-                  City information not found. Please input the city code:
+                  City information not found. Please input the city name:
                 </p>
                 <input
                   type="text"
+                  value={cityNameInput}
+                  onChange={(e) => setCityNameInput(e.target.value)}
                   className="w-full px-4 py-2 text-black bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter city code"
+                  placeholder="Enter city name"
                 />
                 <button
                   type="button"
+                  onClick={handleCityNameSubmit}
                   className="mt-2 px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Submit
@@ -74,18 +116,6 @@ export default function ImageDetector() {
           <img
             src={URL.createObjectURL(file)}
             alt="Input"
-            className="w-full rounded"
-          />
-        </div>
-      )}
-
-      {/* Detected Plate Section */}
-      {result && result.plateImage && (
-        <div className="mt-6 w-full max-w-lg p-4 bg-gray-800 rounded-lg shadow-lg">
-          <h2 className="text-center text-lg mb-2">Detected Plate</h2>
-          <img
-            src={result.plateImage}
-            alt="Detected Plate"
             className="w-full rounded"
           />
         </div>

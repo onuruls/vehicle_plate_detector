@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const usePlateDetection = () => {
+export default function usePlateDetection() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,6 +35,4 @@ const usePlateDetection = () => {
   };
 
   return { result, detectPlate, loading, error };
-};
-
-export default usePlateDetection;
+}
