@@ -1,25 +1,27 @@
 import { useState } from "react";
 import axios from "axios";
 
-export default function usePlateDetection() {
+const usePlateDetection = () => {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const detectPlate = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
+  const detectPlate = async (fileOrBase64) => {
+    const isBase64 = typeof fileOrBase64 === "string";
+    const data = isBase64 ? fileOrBase64 : new FormData();
+    if (!isBase64) {
+      data.append("file", fileOrBase64);
+    }
     setLoading(true);
     setError(null);
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/detect",
-        formData,
+        `http://localhost:8080/api/detect${isBase64 ? "-base64" : ""}`,
+        isBase64 ? data : data,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": isBase64 ? "text/plain" : "multipart/form-data",
           },
         }
       );
@@ -35,4 +37,6 @@ export default function usePlateDetection() {
   };
 
   return { result, detectPlate, loading, error };
-}
+};
+
+export default usePlateDetection;

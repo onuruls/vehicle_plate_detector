@@ -12,14 +12,18 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import javax.imageio.ImageIO;
 
 @Service
 public class PlateDetectionService {
@@ -30,6 +34,8 @@ public class PlateDetectionService {
 
     private final ArrayList<CascadeClassifier> plateCascades = new ArrayList<>();
     private final ITesseract tesseract;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlateDetectionService.class);
 
     public PlateDetectionService() {
         this.plateCascades.add(new CascadeClassifier("src/main/resources/haarcascades/haarcascade_russian_plate_number.xml"));
@@ -43,31 +49,59 @@ public class PlateDetectionService {
 
     public String detectPlate(MultipartFile file) {
         try {
-            int count = 0;
-
-            // Convert MultipartFile to File
             File convFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
             file.transferTo(convFile);
+            return detectPlateFromFile(convFile);
+        } catch (IOException e) {
+            LOGGER.error("Error processing file", e);
+            return "Error processing file";
+        }
+    }
 
+    public String detectPlateFromBase64(String base64Image) {
+        try {
+            String[] parts = base64Image.split(",");
+            if (parts.length != 2) {
+                return "Invalid base64 image format";
+            }
+            String imageString = parts[1];
+            byte[] decodedBytes = Base64.getDecoder().decode(imageString);
+
+            BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(decodedBytes));
+            File imageFile = new File("received_image.png");
+            ImageIO.write(bufferedImage, "png", imageFile);
+
+            return detectPlateFromFile(imageFile);
+        } catch (IOException e) {
+            LOGGER.error("Error decoding image", e);
+            return "Error decoding image";
+        }
+    }
+
+    private String detectPlateFromFile(File file) {
+        try {
             // Read image and preprocess
-            Mat src = Imgcodecs.imread(convFile.getAbsolutePath());
+            Mat src = Imgcodecs.imread(file.getAbsolutePath());
             Mat gray = preprocessImage(src);
             Imgcodecs.imwrite("src/main/resources/temp_preprocessed.bmp", gray);
 
             // Detect plates
             List<Rect> detectedPlates = new ArrayList<>();
             int cascadeIndex = 0;
-            while (detectedPlates.isEmpty() &&  cascadeIndex < plateCascades.size()) {
+            while (detectedPlates.isEmpty() && cascadeIndex < plateCascades.size()) {
                 detectPlates(gray, plateCascades.get(cascadeIndex), detectedPlates);
+                cascadeIndex++;
+            }
+
+            if (detectedPlates.isEmpty()) {
+                return "Not found";
             }
 
             List<String> ocrResults = new ArrayList<>();
             for (Rect rect : detectedPlates) {
-                count++;
-
                 // Crop and save the detected plate
                 Mat plate = new Mat(gray, rect);
-                String platePath = String.format("src/main/resources/temp_plate_%s.bmp", count);
+                String platePath = "src/main/resources/temp_plate.bmp";
                 Imgcodecs.imwrite(platePath, plate);
 
                 // Perform OCR
@@ -78,15 +112,10 @@ public class PlateDetectionService {
 
             return String.join("\n", ocrResults);
 
-        } catch (IOException | TesseractException e) {
+        } catch (TesseractException e) {
+            LOGGER.error("Error detecting plate", e);
             return "Error detecting plate";
         }
-    }
-
-    private void detectPlates(Mat image, CascadeClassifier classifier, List<Rect> detectedPlates) {
-        MatOfRect plates = new MatOfRect();
-        classifier.detectMultiScale(image, plates, 1.1, 5);
-        detectedPlates.addAll(Arrays.asList(plates.toArray()));
     }
 
     private Mat preprocessImage(Mat src) {
@@ -96,6 +125,12 @@ public class PlateDetectionService {
         Imgproc.GaussianBlur(gray, gray, new Size(5, 5), 0);
         Imgproc.threshold(gray, gray, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
         return gray;
+    }
+
+    private void detectPlates(Mat image, CascadeClassifier classifier, List<Rect> detectedPlates) {
+        MatOfRect plates = new MatOfRect();
+        classifier.detectMultiScale(image, plates, 1.1, 5);
+        detectedPlates.addAll(Arrays.asList(plates.toArray()));
     }
 
     private String performOCR(File imageFile) throws TesseractException {

@@ -16,4 +16,9 @@ public class PlateDetectionController {
     public String detectPlate(@RequestParam("file") MultipartFile file) {
         return plateDetectionService.detectPlate(file);
     }
+
+    @PostMapping("/detect-base64")
+    public String detectPlateFromBase64(@RequestBody String base64Image) {
+        return plateDetectionService.detectPlateFromBase64(base64Image);
+    }
 }

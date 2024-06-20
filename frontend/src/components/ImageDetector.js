@@ -31,8 +31,8 @@ export default function ImageDetector() {
     event.preventDefault();
     if (file) {
       const detectionResult = await detectPlate(file);
-      if (detectionResult && detectionResult.result) {
-        const code = detectionResult.result.split(" ")[0];
+      if (detectionResult && detectionResult !== "Not found") {
+        const code = detectionResult.split(" ")[0];
         getCityNameByCode(code);
       }
     }
@@ -79,12 +79,12 @@ export default function ImageDetector() {
               Detection Result:
             </h2>
             <p className="text-lg">{result}</p>
-            {!cityLoading && cityName && (
+            {result !== "Not found" && !cityLoading && cityName && (
               <div className="mt-4">
                 <p className="text-green-500">City: {cityName.city}</p>
               </div>
             )}
-            {!cityLoading && !cityName && (
+            {result !== "Not found" && !cityLoading && !cityName && (
               <div className="mt-4">
                 <p className="text-red-500">
                   City information not found. Please input the city name:
