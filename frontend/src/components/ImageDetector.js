@@ -25,6 +25,7 @@ export default function ImageDetector() {
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
+    setCityNameInput("");
   };
 
   const handleSubmit = async (event) => {

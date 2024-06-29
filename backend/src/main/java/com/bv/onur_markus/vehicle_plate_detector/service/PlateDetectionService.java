@@ -82,14 +82,14 @@ public class PlateDetectionService {
         try {
             // Read image and preprocess
             Mat src = Imgcodecs.imread(file.getAbsolutePath());
-            Mat gray = preprocessImage(src);
-            Imgcodecs.imwrite("src/main/resources/temp_preprocessed.bmp", gray);
+            Mat processedImage = preprocessImage(src);
+            Imgcodecs.imwrite("src/main/resources/processed_image1.bmp", processedImage);
 
             // Detect plates
             List<Rect> detectedPlates = new ArrayList<>();
             int cascadeIndex = 0;
             while (detectedPlates.isEmpty() && cascadeIndex < plateCascades.size()) {
-                detectPlates(gray, plateCascades.get(cascadeIndex), detectedPlates);
+                detectPlates(processedImage, plateCascades.get(cascadeIndex), detectedPlates);
                 cascadeIndex++;
             }
 
@@ -100,7 +100,7 @@ public class PlateDetectionService {
             List<String> ocrResults = new ArrayList<>();
             for (Rect rect : detectedPlates) {
                 // Crop and save the detected plate
-                Mat plate = new Mat(gray, rect);
+                Mat plate = new Mat(processedImage, rect);
                 String platePath = "src/main/resources/temp_plate.bmp";
                 Imgcodecs.imwrite(platePath, plate);
 
@@ -119,12 +119,28 @@ public class PlateDetectionService {
     }
 
     private Mat preprocessImage(Mat src) {
+        // Convert to grayscale
         Mat gray = new Mat();
         Imgproc.cvtColor(src, gray, Imgproc.COLOR_BGR2GRAY);
+
+        // Enhance contrast using histogram equalization
         Imgproc.equalizeHist(gray, gray);
-        Imgproc.GaussianBlur(gray, gray, new Size(5, 5), 0);
-        Imgproc.threshold(gray, gray, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
-        return gray;
+
+        // Apply bilateral filter to reduce noise while keeping edges sharp
+        Mat bilateral = new Mat();
+        Imgproc.bilateralFilter(gray, bilateral, 9, 75, 75);
+
+        // Apply adaptive thresholding
+        Mat adaptiveThreshold = new Mat();
+        Imgproc.adaptiveThreshold(bilateral, adaptiveThreshold, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 11, 2);
+
+        // Morphological operations to close gaps in detected edges
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+        Mat morph = new Mat();
+        Imgproc.morphologyEx(adaptiveThreshold, morph, Imgproc.MORPH_CLOSE, kernel);
+        Imgproc.morphologyEx(morph, morph, Imgproc.MORPH_OPEN, kernel);
+
+        return morph;
     }
 
     private void detectPlates(Mat image, CascadeClassifier classifier, List<Rect> detectedPlates) {
@@ -138,9 +154,8 @@ public class PlateDetectionService {
     }
 
     private String filterOCRResult(String ocrResult) {
-        // Use regular expressions to extract only letters, numbers, and spaces between groups
         StringBuilder filteredResult = new StringBuilder();
-        Pattern pattern = Pattern.compile("[A-Za-z0-9]+");
+        Pattern pattern = Pattern.compile("[A-Z0-9]+");
         Matcher matcher = pattern.matcher(ocrResult);
         boolean first = true;
         while (matcher.find()) {
