@@ -109,7 +109,7 @@ public class PlateDetectionService {
                 result = filterOCRResult(result);
                 ocrResults.add(result);
             }
-
+            //TODO: Check if the detected plate is valid or string is nonEmpty
             return String.join("\n", ocrResults);
 
         } catch (TesseractException e) {
