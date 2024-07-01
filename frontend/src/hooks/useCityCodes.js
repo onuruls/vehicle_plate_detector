@@ -16,7 +16,12 @@ const useCityCodes = () => {
       setCityName(response.data);
     } catch (error) {
       console.error("Error fetching city name:", error);
-      setError("Error fetching city name");
+      if (error.response && error.response.status === 404) {
+        setCityName(null);
+        setError("City code not found");
+      } else {
+        setError("Error fetching city name");
+      }
     } finally {
       setLoading(false);
     }

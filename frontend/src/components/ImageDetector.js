@@ -12,6 +12,7 @@ export default function ImageDetector() {
     getCityNameByCode,
     addCityName,
     loading: cityLoading,
+    error: cityError,
   } = useCityCodes();
 
   const handleFileChange = (event) => {
@@ -64,7 +65,7 @@ export default function ImageDetector() {
         <DetectionResult
           result={result}
           loading={loading}
-          error={error}
+          error={error || cityError}
           cityName={cityName}
           cityLoading={cityLoading}
           cityNameInput={cityNameInput}
