@@ -109,8 +109,8 @@ public class PlateDetectionService {
                 result = filterOCRResult(result);
                 ocrResults.add(result);
             }
-            //TODO: Check if the detected plate is valid or string is nonEmpty
-            return String.join("\n", ocrResults);
+
+            return getValidGermanPlate(ocrResults);
 
         } catch (TesseractException e) {
             LOGGER.error("Error detecting plate", e);
@@ -166,5 +166,15 @@ public class PlateDetectionService {
             first = false;
         }
         return filteredResult.toString();
+    }
+
+    private String getValidGermanPlate(List<String> ocrResults) {
+        Pattern germanPlatePattern = Pattern.compile("^[A-Z]{1,3} [A-Z]{1,2} \\d{1,4}$");
+        for (String result : ocrResults) {
+            if (germanPlatePattern.matcher(result).matches()) {
+                return result;
+            }
+        }
+        return "Not found";
     }
 }
