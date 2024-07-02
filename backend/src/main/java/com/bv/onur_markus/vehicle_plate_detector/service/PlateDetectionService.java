@@ -75,49 +75,48 @@ public class PlateDetectionService {
     }
 
     private String detectPlateFromFile(File file) {
-        try {
-            // Read the image file
-            Mat src = Imgcodecs.imread(file.getAbsolutePath());
-            Mat gray = new Mat();
+        // Read the image file
+        Mat src = Imgcodecs.imread(file.getAbsolutePath());
 
-            // Convert to grayscale
-            Imgproc.cvtColor(src, gray, Imgproc.COLOR_BGR2GRAY);
-            Imgcodecs.imwrite("src/main/resources/gray_image.png", gray);
+        // Preprocess the image
+        Mat processedImage = preprocessImage(src);
+        Imgcodecs.imwrite("src/main/resources/thresh_image.png", processedImage);
 
-            // Apply Gaussian blur to reduce noise
-            Imgproc.GaussianBlur(gray, gray, new Size(5, 5), 0);
-            Imgproc.equalizeHist(gray, gray);
+        // Detect possible plates from the thresholded image
+        List<Rect> possiblePlates = detectPossiblePlates(processedImage);
 
-            // Apply blackhat morphology to highlight dark regions on a light background
-            Mat blackhat = new Mat();
-            Mat rectKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(13, 5));
-            Imgproc.morphologyEx(gray, blackhat, Imgproc.MORPH_BLACKHAT, rectKernel);
-            Imgcodecs.imwrite("src/main/resources/blackhat_image.png", blackhat);
+        // Get the best valid German plate and its OCR result
+        PlateDetectionResult detectionResult = getValidGermanPlate(possiblePlates, src);
 
-            // Apply adaptive thresholding to get a binary image
-            Mat thresh = new Mat();
-            Imgproc.adaptiveThreshold(blackhat, thresh, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 25, 15);
-            Imgcodecs.imwrite("src/main/resources/thresh_image.png", thresh);
-
-            // Detect possible plates from the thresholded image
-            List<Rect> possiblePlates = detectPossiblePlates(thresh);
-
-            // If any plates are detected, perform OCR on the best candidate
-            if (!possiblePlates.isEmpty()) {
-                Rect bestPlate = possiblePlates.get(0);
-                Mat plate = new Mat(src, bestPlate);
-                String platePath = "src/main/resources/temp_plate.bmp";
-                Imgcodecs.imwrite(platePath, plate);
-                String ocrResult = performOCR(new File(platePath));
-                return filterOCRResult(ocrResult);
-            }
-
-            return "Not found";
-
-        } catch (TesseractException e) {
-            LOGGER.error("Error detecting plate", e);
-            return "Error detecting plate";
+        if (detectionResult != null) {
+            return detectionResult.filteredOcrResult();
         }
+
+        return "Not found";
+    }
+
+    private Mat preprocessImage(Mat src) {
+        Mat gray = new Mat();
+
+        // Convert to grayscale
+        Imgproc.cvtColor(src, gray, Imgproc.COLOR_BGR2GRAY);
+        Imgcodecs.imwrite("src/main/resources/gray_image.png", gray);
+
+        // Apply Gaussian blur to reduce noise
+        Imgproc.GaussianBlur(gray, gray, new Size(5, 5), 0);
+        Imgproc.equalizeHist(gray, gray);
+
+        // Apply blackhat morphology to highlight dark regions on a light background
+        Mat blackhat = new Mat();
+        Mat rectKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(13, 5));
+        Imgproc.morphologyEx(gray, blackhat, Imgproc.MORPH_BLACKHAT, rectKernel);
+        Imgcodecs.imwrite("src/main/resources/blackhat_image.png", blackhat);
+
+        // Apply adaptive thresholding to get a binary image
+        Mat thresh = new Mat();
+        Imgproc.adaptiveThreshold(blackhat, thresh, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 25, 15);
+
+        return thresh;
     }
 
     private List<Rect> detectPossiblePlates(Mat preprocessedImage) {
@@ -142,19 +141,38 @@ public class PlateDetectionService {
         return possiblePlates;
     }
 
-    private String performOCR(File imageFile) throws TesseractException {
-        // Perform OCR using Tesseract
-        return tesseract.doOCR(imageFile);
+    private String performOCR(File imageFile) {
+        try {
+            return tesseract.doOCR(imageFile);
+        } catch (TesseractException e) {
+            LOGGER.error("Error performing OCR on plate", e);
+            return "";
+        }
+    }
+
+    private PlateDetectionResult getValidGermanPlate(List<Rect> possiblePlates, Mat src) {
+        Pattern germanPlatePattern = Pattern.compile("^[A-Z]{1,3} [A-Z]{1,2} \\d{1,4}$");
+        for (Rect rect : possiblePlates) {
+            Mat plate = new Mat(src, rect);
+            String platePath = "src/main/resources/temp_plate.bmp";
+            Imgcodecs.imwrite(platePath, plate);
+            String ocrResult = performOCR(new File(platePath));
+            String filteredResult = filterOCRResult(ocrResult);
+            Matcher matcher = germanPlatePattern.matcher(filteredResult);
+            if (matcher.find()) {
+                return new PlateDetectionResult(rect, filteredResult);
+            }
+        }
+        return null;
     }
 
     private String filterOCRResult(String ocrResult) {
-        // Filter OCR results to keep only alphanumeric characters
-        StringBuilder filteredResult = new StringBuilder();
-        Pattern pattern = Pattern.compile("[A-Z0-9]+");
-        Matcher matcher = pattern.matcher(ocrResult);
-        while (matcher.find()) {
-            filteredResult.append(matcher.group()).append(" ");
-        }
-        return filteredResult.toString().trim();
+        // Refined pattern to remove unwanted characters
+        ocrResult = ocrResult.replaceAll("[^A-Z0-9]", " ").trim();
+        // Remove extra spaces between characters
+        return ocrResult.replaceAll("\\s+", " ");
+    }
+
+    private record PlateDetectionResult(Rect rect, String filteredOcrResult) {
     }
 }
