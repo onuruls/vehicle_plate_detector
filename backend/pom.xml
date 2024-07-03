@@ -14,7 +14,7 @@
 	<name>vehicle_plate_detector</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<java.version>22</java.version>
+		<java.version>17</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -36,11 +36,6 @@
 			<groupId>org.openpnp</groupId>
 			<artifactId>opencv</artifactId>
 			<version>4.9.0-0</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sourceforge.tess4j</groupId>
-			<artifactId>tess4j</artifactId>
-			<version>5.11.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

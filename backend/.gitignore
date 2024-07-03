@@ -56,3 +56,8 @@ spring-boot-*.zip
 
 ### VS Code ###
 .vscode/
+
+# Media files
+src/main/resources/*.bmp
+src/main/resources/segmented_chars/*
+received_image.png
