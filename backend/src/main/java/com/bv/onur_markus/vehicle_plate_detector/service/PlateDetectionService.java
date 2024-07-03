@@ -95,12 +95,11 @@ public class PlateDetectionService {
         }
 
         if (bestResult != null) {
-            Imgcodecs.imwrite("src/main/resources/best_thresh_image.png", bestResult.processedImage());
-            Imgcodecs.imwrite("src/main/resources/best_plate_image.png", new Mat(src, bestResult.rect()));
+            Imgcodecs.imwrite("src/main/resources/best_thresh_image.bmp", bestResult.processedImage);
+            Imgcodecs.imwrite("src/main/resources/best_plate_image.bmp", new Mat(src, bestResult.rect()));
 
             // Extract plate text
             return characterRecognizer.extractPlateText();
-
         }
 
         return "Not found";

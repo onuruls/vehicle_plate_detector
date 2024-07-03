@@ -58,6 +58,6 @@ spring-boot-*.zip
 .vscode/
 
 # Media files
-/src/main/resources/.bmp
-/src/main/resources/.png
-/src/main/resources/segmented_chars/
+src/main/resources/*.bmp
+src/main/resources/segmented_chars/*
+received_image.png

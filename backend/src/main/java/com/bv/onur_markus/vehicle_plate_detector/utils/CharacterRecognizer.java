@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 
 public class CharacterRecognizer {
@@ -26,7 +27,7 @@ public class CharacterRecognizer {
         File segmentedDir = new File("src/main/resources/segmented_chars");
         File[] files = segmentedDir.listFiles((dir, name) -> name.startsWith("char_") && name.endsWith(".png"));
 
-        if (files != null) {
+        if (files != null && isValidPlateLength(files.length)) {
             Arrays.sort(files, Comparator.comparingInt(f -> Integer.parseInt(f.getName().replace("char_", "").replace(".png", ""))));
             for (File file : files) {
                 try {
@@ -41,8 +42,9 @@ public class CharacterRecognizer {
                     LOGGER.error("Error reading segmented char image", e);
                 }
             }
+            return plateText.toString();
         }
-        return plateText.toString();
+        return "Not found";
     }
     private boolean isDarkSpaceMat(Mat charImg) {
         return Core.mean(charImg).val[0] == 0;
@@ -64,5 +66,9 @@ public class CharacterRecognizer {
         }
 
         return bestMatch;
+    }
+
+    private boolean isValidPlateLength(int length) {
+        return length >= 6 && length <= 10;
     }
 }
