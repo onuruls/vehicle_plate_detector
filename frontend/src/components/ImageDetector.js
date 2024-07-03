@@ -1,45 +1,19 @@
 import React, { useState } from "react";
-import usePlateDetection from "../hooks/usePlateDetection";
-import useCityCodes from "../hooks/useCityCodes";
 import DetectionResult from "./DetectionResult";
+import usePlateDetection from "../hooks/usePlateDetection";
 
 export default function ImageDetector() {
   const [file, setFile] = useState(null);
-  const [cityNameInput, setCityNameInput] = useState("");
   const { result, detectPlate, loading, error } = usePlateDetection();
-  const {
-    cityName,
-    getCityNameByCode,
-    addCityName,
-    loading: cityLoading,
-    error: cityError,
-  } = useCityCodes();
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
-    setCityNameInput("");
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (file) {
-      const detectionResult = await detectPlate(file);
-      if (detectionResult && detectionResult !== "Not found") {
-        const code = detectionResult.split(" ")[0];
-        getCityNameByCode(code);
-      }
-    }
-  };
-
-  const handleCityNameSubmit = async () => {
-    if (cityNameInput.trim()) {
-      const newCity = {
-        code: result.split(" ")[0],
-        city: cityNameInput.trim(),
-      };
-      await addCityName(newCity);
-      setCityNameInput("");
-      getCityNameByCode(newCity.code);
+      await detectPlate(file);
     }
   };
 
@@ -62,16 +36,7 @@ export default function ImageDetector() {
             Upload and Detect
           </button>
         </form>
-        <DetectionResult
-          result={result}
-          loading={loading}
-          error={error || cityError}
-          cityName={cityName}
-          cityLoading={cityLoading}
-          cityNameInput={cityNameInput}
-          setCityNameInput={setCityNameInput}
-          handleCityNameSubmit={handleCityNameSubmit}
-        />
+        <DetectionResult result={result} loading={loading} error={error} />
       </div>
       {file && !result && (
         <div className="mt-6 w-full max-w-lg p-4 bg-gray-800 rounded-lg shadow-lg">
