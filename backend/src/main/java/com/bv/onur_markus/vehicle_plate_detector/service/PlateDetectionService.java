@@ -1,6 +1,6 @@
 package com.bv.onur_markus.vehicle_plate_detector.service;
 
-import net.sourceforge.tess4j.ITessAPI;
+import nu.pattern.OpenCV;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -8,41 +8,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import net.sourceforge.tess4j.ITesseract;
-import net.sourceforge.tess4j.Tesseract;
-import net.sourceforge.tess4j.TesseractException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.ArrayList;
+import java.util.*;
 
 @Service
 public class PlateDetectionService {
 
     static {
-        nu.pattern.OpenCV.loadShared();
+        OpenCV.loadLocally();
     }
 
-    private final ITesseract tesseract;
     private static final Logger LOGGER = LoggerFactory.getLogger(PlateDetectionService.class);
+    private final Map<Character, Mat> templates = new HashMap<>();
 
     public PlateDetectionService() {
-        this.tesseract = new Tesseract();
-        this.tesseract.setDatapath("src/main/resources/tessdatas");
-        this.tesseract.setLanguage("deu");
-        this.tesseract.setPageSegMode(ITessAPI.TessPageSegMode.PSM_SINGLE_LINE);
+        loadTemplates();
     }
 
     public String detectPlate(MultipartFile file) {
         try {
-            // Convert MultipartFile to File
             File convFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
             file.transferTo(convFile);
             return detectPlateFromFile(convFile);
@@ -54,7 +43,6 @@ public class PlateDetectionService {
 
     public String detectPlateFromBase64(String base64Image) {
         try {
-            // Decode Base64 image
             String[] parts = base64Image.split(",");
             if (parts.length != 2) {
                 return "Invalid base64 image format";
@@ -62,7 +50,6 @@ public class PlateDetectionService {
             String imageString = parts[1];
             byte[] decodedBytes = Base64.getDecoder().decode(imageString);
 
-            // Convert decoded bytes to BufferedImage
             BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(decodedBytes));
             File imageFile = new File("received_image.png");
             ImageIO.write(bufferedImage, "png", imageFile);
@@ -75,46 +62,89 @@ public class PlateDetectionService {
     }
 
     private String detectPlateFromFile(File file) {
+        // Clear the segmented_chars directory
+        clearSegmentedCharsDirectory();
+
         // Read the image file
         Mat src = Imgcodecs.imread(file.getAbsolutePath());
 
-        // Preprocess the image
-        Mat processedImage = preprocessImage(src);
-        Imgcodecs.imwrite("src/main/resources/thresh_image.png", processedImage);
+        // Test multiple thresholds
+        int[] thresholds = {15, 10, 5, 0};
+        PlateDetectionResult bestResult = null;
 
-        // Detect possible plates from the thresholded image
-        List<Rect> possiblePlates = detectPossiblePlates(processedImage);
+        for (int threshold : thresholds) {
+            Mat processedImage = preprocessImage(src, threshold);
+            List<Rect> possiblePlates = detectPossiblePlates(processedImage);
+            for (Rect plateRect : possiblePlates) {
+                Mat normalizedPlate = normalizePlate(new Mat(src, plateRect));
+                List<Mat> segmentedChars = segmentCharacters(normalizedPlate);
+                int charCount = segmentedChars.size();
 
-        // Get the best valid German plate and its OCR result
-        PlateDetectionResult detectionResult = getValidGermanPlate(possiblePlates, src);
+                if (bestResult == null || charCount > bestResult.charCount()) {
+                    bestResult = new PlateDetectionResult(plateRect, "", charCount, threshold, processedImage.clone());
+                    saveSegmentedChars(segmentedChars);
+                }
+            }
+        }
 
-        if (detectionResult != null) {
-            return detectionResult.filteredOcrResult();
+        if (bestResult != null) {
+            Imgcodecs.imwrite("src/main/resources/best_thresh_image.png", bestResult.processedImage());
+            Imgcodecs.imwrite("src/main/resources/best_plate_image.png", new Mat(src, bestResult.rect()));
+
+            // Extract plate text
+            String plateText = extractPlateText(bestResult);
+            return "Plate found: " + plateText + " with " + bestResult.charCount() + " characters.";
         }
 
         return "Not found";
     }
 
-    private Mat preprocessImage(Mat src) {
+    private String extractPlateText(PlateDetectionResult bestResult) {
+        StringBuilder plateText = new StringBuilder();
+
+        File segmentedDir = new File("src/main/resources/segmented_chars");
+        File[] files = segmentedDir.listFiles((dir, name) -> name.startsWith("char_") && name.endsWith(".png"));
+
+        if (files != null) {
+            Arrays.sort(files, Comparator.comparingInt(f -> Integer.parseInt(f.getName().replace("char_", "").replace(".png", ""))));
+            for (File file : files) {
+                try {
+                    Mat charImg = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.IMREAD_GRAYSCALE);
+                    char bestMatch = findBestTemplateMatch(charImg);
+                    plateText.append(bestMatch);
+                } catch (Exception e) {
+                    LOGGER.error("Error reading segmented char image", e);
+                }
+            }
+        }
+
+        return plateText.toString();
+    }
+
+    private void clearSegmentedCharsDirectory() {
+        File directory = new File("src/main/resources/segmented_chars");
+        if (directory.exists() && directory.isDirectory()) {
+            for (File file : directory.listFiles()) {
+                if (file.isFile()) {
+                    file.delete();
+                }
+            }
+        }
+    }
+
+    private Mat preprocessImage(Mat src, int threshold) {
         Mat gray = new Mat();
 
-        // Convert to grayscale
         Imgproc.cvtColor(src, gray, Imgproc.COLOR_BGR2GRAY);
-        Imgcodecs.imwrite("src/main/resources/gray_image.png", gray);
-
-        // Apply Gaussian blur to reduce noise
         Imgproc.GaussianBlur(gray, gray, new Size(5, 5), 0);
         Imgproc.equalizeHist(gray, gray);
 
-        // Apply blackhat morphology to highlight dark regions on a light background
         Mat blackhat = new Mat();
         Mat rectKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(13, 5));
         Imgproc.morphologyEx(gray, blackhat, Imgproc.MORPH_BLACKHAT, rectKernel);
-        Imgcodecs.imwrite("src/main/resources/blackhat_image.png", blackhat);
 
-        // Apply adaptive thresholding to get a binary image
         Mat thresh = new Mat();
-        Imgproc.adaptiveThreshold(blackhat, thresh, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 25, 15);
+        Imgproc.adaptiveThreshold(blackhat, thresh, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 25, threshold);
 
         return thresh;
     }
@@ -124,7 +154,6 @@ public class PlateDetectionService {
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
 
-        // Find contours in the preprocessed image
         Imgproc.findContours(preprocessedImage, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         for (MatOfPoint contour : contours) {
@@ -132,8 +161,7 @@ public class PlateDetectionService {
             double aspectRatio = (double) rect.width / rect.height;
             double area = Imgproc.contourArea(contour);
 
-            // Filter contours by aspect ratio and area to find possible plates
-            if (aspectRatio >= 2 && aspectRatio <= 6 && area > 100) {
+            if (aspectRatio >= 2 && aspectRatio <= 7 && area > 100) {
                 possiblePlates.add(rect);
             }
         }
@@ -141,38 +169,203 @@ public class PlateDetectionService {
         return possiblePlates;
     }
 
-    private String performOCR(File imageFile) {
-        try {
-            return tesseract.doOCR(imageFile);
-        } catch (TesseractException e) {
-            LOGGER.error("Error performing OCR on plate", e);
-            return "";
+    private Mat normalizePlate(Mat plate) {
+        double aspectRatio = (double) plate.width() / plate.height();
+        int targetHeight = 100;
+        int targetWidth = (int) (targetHeight * aspectRatio);
+
+        Mat normalizedPlate = new Mat();
+        Imgproc.resize(plate, normalizedPlate, new Size(targetWidth, targetHeight));
+        return normalizedPlate;
+    }
+
+    private double calculateAverageIntensity(Mat image) {
+        if (image.channels() > 1) {
+            Mat gray = new Mat();
+            Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY);
+            return Core.mean(gray).val[0];
+        } else {
+            return Core.mean(image).val[0];
         }
     }
 
-    private PlateDetectionResult getValidGermanPlate(List<Rect> possiblePlates, Mat src) {
-        Pattern germanPlatePattern = Pattern.compile("^[A-Z]{1,3} [A-Z]{1,2} \\d{1,4}$");
-        for (Rect rect : possiblePlates) {
-            Mat plate = new Mat(src, rect);
-            String platePath = "src/main/resources/temp_plate.bmp";
-            Imgcodecs.imwrite(platePath, plate);
-            String ocrResult = performOCR(new File(platePath));
-            String filteredResult = filterOCRResult(ocrResult);
-            Matcher matcher = germanPlatePattern.matcher(filteredResult);
-            if (matcher.find()) {
-                return new PlateDetectionResult(rect, filteredResult);
+    private double[] calculateMeanAndStdDev(List<Mat> images) {
+        List<Double> intensities = new ArrayList<>();
+        for (Mat img : images) {
+            intensities.add(calculateAverageIntensity(img));
+        }
+
+        double mean = intensities.stream().mapToDouble(val -> val).average().orElse(0.0);
+        double stdDev = Math.sqrt(intensities.stream().mapToDouble(val -> Math.pow(val - mean, 2)).average().orElse(0.0));
+
+        return new double[]{mean, stdDev};
+    }
+
+    private List<Mat> segmentCharacters(Mat plate) {
+        Mat grayPlate = new Mat();
+        Imgproc.cvtColor(plate, grayPlate, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.threshold(grayPlate, grayPlate, 0, 255, Imgproc.THRESH_BINARY_INV + Imgproc.THRESH_OTSU);
+
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(grayPlate, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        List<Rect> boundingRects = new ArrayList<>();
+        List<Mat> charImages = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            Rect charRect = Imgproc.boundingRect(contour);
+            double aspectRatio = (double) charRect.width / charRect.height;
+            if (isCharSizeValid(charRect) && isAspectRatioValid(aspectRatio)) {
+                boundingRects.add(charRect);
+                charImages.add(new Mat(grayPlate, charRect));
             }
         }
-        return null;
+
+        List<Mat> sortedCharImages = new ArrayList<>();
+        boundingRects.stream()
+                .sorted(Comparator.comparingInt(rect -> rect.x))
+                .forEachOrdered(rect -> {
+                    for (int i = 0; i < boundingRects.size(); i++) {
+                        if (boundingRects.get(i).equals(rect)) {
+                            sortedCharImages.add(charImages.get(i));
+                            break;
+                        }
+                    }
+                });
+
+        double[] meanAndStdDev = calculateMeanAndStdDev(sortedCharImages);
+        double mean = meanAndStdDev[0];
+        double stdDev = meanAndStdDev[1];
+
+        List<Mat> filteredChars = new ArrayList<>();
+        List<Integer> distances = new ArrayList<>();
+        for (int i = 0; i < sortedCharImages.size(); i++) {
+            Mat charImg = sortedCharImages.get(i);
+            double averageIntensity = calculateAverageIntensity(charImg);
+            if (Math.abs(averageIntensity - mean) <= 1.5 * stdDev) {
+                // Enhance the character by applying dilation and erosion
+                Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+                Imgproc.dilate(charImg, charImg, kernel);
+                Imgproc.erode(charImg, charImg, kernel);
+
+                // Resize the character to its natural proportion
+                double aspectRatio = (double) charImg.width() / charImg.height();
+                int targetHeight = 48;
+                int targetWidth = (int) (targetHeight * aspectRatio);
+                Imgproc.resize(charImg, charImg, new Size(targetWidth, targetHeight));
+
+                filteredChars.add(charImg);
+
+                // Calculate distances between characters
+                if (i > 0) {
+                    Rect prevRect = boundingRects.get(i - 1);
+                    Rect currRect = boundingRects.get(i);
+                    int distance = currRect.x - (prevRect.x + prevRect.width);
+                    distances.add(distance);
+                }
+            }
+        }
+
+        // Insert spaces based on distances between contours
+        return insertSpaces(filteredChars, distances, stdDev);
     }
 
-    private String filterOCRResult(String ocrResult) {
-        // Refined pattern to remove unwanted characters
-        ocrResult = ocrResult.replaceAll("[^A-Z0-9]", " ").trim();
-        // Remove extra spaces between characters
-        return ocrResult.replaceAll("\\s+", " ");
+
+    private List<Mat> insertSpaces(List<Mat> filteredChars, List<Integer> distances, double stdDev) {
+        List<Mat> charsWithSpaces = new ArrayList<>();
+
+        for (int i = 0; i < filteredChars.size(); i++) {
+            charsWithSpaces.add(filteredChars.get(i));
+            if (i < distances.size() && distances.get(i) > stdDev) {
+                charsWithSpaces.add(createSpaceMat());
+            }
+        }
+        return charsWithSpaces;
     }
 
-    private record PlateDetectionResult(Rect rect, String filteredOcrResult) {
+    private Mat createSpaceMat() {
+        return Mat.zeros(new Size(48, 48), CvType.CV_8UC1);
+    }
+
+    private boolean isCharSizeValid(Rect rect) {
+        int minWidth = 10;
+        int maxWidth = 80;
+        int minHeight = 60;
+        int maxHeight = 100;
+        return rect.width >= minWidth && rect.width <= maxWidth && rect.height >= minHeight && rect.height <= maxHeight;
+    }
+
+    private boolean isAspectRatioValid(double aspectRatio) {
+        double minAspectRatio = 0.2;
+        double maxAspectRatio = 1.0;
+        return aspectRatio >= minAspectRatio && aspectRatio <= maxAspectRatio;
+    }
+
+    private void saveSegmentedChars(List<Mat> segmentedChars) {
+        String outputDir = "src/main/resources/segmented_chars";
+        new File(outputDir).mkdirs();
+
+        int index = 0;
+        for (Mat charImg : segmentedChars) {
+            Imgcodecs.imwrite(outputDir + "/char_" + index + ".png", charImg);
+            index++;
+        }
+    }
+
+    private void loadTemplates() {
+        String templateDir = "src/main/resources/templates";
+        File dir = new File(templateDir);
+
+        if (dir.exists() && dir.isDirectory()) {
+            for (File file : Objects.requireNonNull(dir.listFiles())) {
+                if (file.isFile() && file.getName().endsWith(".png")) {
+                    String name = file.getName().replace(".png", "");
+                    char templateChar = name.charAt(0);
+                    Mat template = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.IMREAD_GRAYSCALE);
+                    templates.put(templateChar, template);
+                }
+            }
+        } else {
+            throw new RuntimeException("Template directory not found: " + templateDir);
+        }
+    }
+
+    private List<Mat> assignCharactersToTemplates(List<Mat> filteredChars) {
+        List<Mat> assignedChars = new ArrayList<>();
+
+        for (Mat charImg : filteredChars) {
+            char bestMatch = findBestTemplateMatch(charImg);
+            Mat annotatedCharImg = annotateCharacter(charImg, bestMatch);
+            assignedChars.add(annotatedCharImg);
+        }
+
+        return assignedChars;
+    }
+
+    private char findBestTemplateMatch(Mat charImg) {
+        char bestMatch = '?';
+        double bestMatchScore = Double.MAX_VALUE;
+
+        for (Map.Entry<Character, Mat> entry : templates.entrySet()) {
+            Mat result = new Mat();
+            Imgproc.matchTemplate(charImg, entry.getValue(), result, Imgproc.TM_SQDIFF_NORMED);
+            Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
+
+            if (mmr.minVal < bestMatchScore) {
+                bestMatchScore = mmr.minVal;
+                bestMatch = entry.getKey();
+            }
+        }
+
+        return bestMatch;
+    }
+
+    private Mat annotateCharacter(Mat charImg, char bestMatch) {
+        Mat annotatedImg = charImg.clone();
+        Imgproc.putText(annotatedImg, String.valueOf(bestMatch), new Point(5, 20), Imgproc.FONT_HERSHEY_SIMPLEX, 0.8, new Scalar(255, 255, 255), 2);
+        return annotatedImg;
+    }
+
+    private record PlateDetectionResult(Rect rect, String filteredOcrResult, int charCount, int threshold, Mat processedImage) {
     }
 }
