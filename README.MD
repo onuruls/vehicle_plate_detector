@@ -81,3 +81,10 @@ Falls Sie das Backend über die Kommandozeile starten möchten, führen Sie folg
 ### Beispielbilder
 
 Im Ordner `examplePlates` finden Sie Beispielbilder zum Testen der Anwendung.
+
+## Ersteller
+
+Dieses Projekt wurde erstellt von:
+- [Onur]
+- [Markus]
+
