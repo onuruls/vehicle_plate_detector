@@ -1,7 +1,7 @@
-import React, { useRef, useCallback, useState } from "react";
+import React, { useRef, useCallback, useState, useEffect } from "react";
 import Webcam from "react-webcam";
-import usePlateDetection from "../hooks/usePlateDetection";
 import DetectionResult from "./DetectionResult";
+import usePlateDetection from "../hooks/usePlateDetection";
 
 export default function CamDetector() {
   const webcamRef = useRef(null);
@@ -10,8 +10,10 @@ export default function CamDetector() {
   const { result, detectPlate, loading, error } = usePlateDetection();
 
   const capture = useCallback(() => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (imageSrc) detectPlate(imageSrc);
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (imageSrc) detectPlate(imageSrc);
+    }
   }, [webcamRef, detectPlate]);
 
   const handleStartCapture = () => {
@@ -29,6 +31,14 @@ export default function CamDetector() {
       setIntervalId(null);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [intervalId]);
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white p-4">
