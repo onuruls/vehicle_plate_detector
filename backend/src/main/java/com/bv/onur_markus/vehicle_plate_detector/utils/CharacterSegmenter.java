@@ -9,23 +9,20 @@ import java.util.List;
 
 public class CharacterSegmenter {
 
+    /**
+     * Processes the input plate to segment out potential characters.
+     * Converts the plate to grayscale, identifies contours, and extracts each character.
+     */
     public List<Mat> segmentCharacters(Mat plate) {
         Mat grayPlate = convertToGrayScale(plate);
         List<MatOfPoint> contours = findContours(grayPlate);
-
         List<Rect> boundingRects = getBoundingRects(contours);
-        List<Mat> sortedCharImages = sortCharImages(boundingRects, grayPlate);
-
-        double[] meanAndStdDev = calculateMeanAndStdDev(sortedCharImages);
-        double mean = meanAndStdDev[0];
-        double stdDev = meanAndStdDev[1];
-
-        List<Mat> filteredChars = filterAndEnhanceCharacters(sortedCharImages, mean, stdDev);
-        List<Integer> distances = calculateDistances(boundingRects);
-
-        return insertSpaces(filteredChars, distances, stdDev);
+        return sortCharImages(boundingRects, grayPlate);
     }
 
+    /**
+     * Converts the input image to grayscale and applies a binary threshold for clearer contour detection.
+     */
     private Mat convertToGrayScale(Mat plate) {
         Mat grayPlate = new Mat();
         Imgproc.cvtColor(plate, grayPlate, Imgproc.COLOR_BGR2GRAY);
@@ -33,6 +30,9 @@ public class CharacterSegmenter {
         return grayPlate;
     }
 
+    /**
+     * Detects contours in the grayscale image which represent possible characters.
+     */
     private List<MatOfPoint> findContours(Mat grayPlate) {
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
@@ -40,12 +40,14 @@ public class CharacterSegmenter {
         return contours;
     }
 
+    /**
+     * Calculates bounding rectangles for each contour to potentially identify characters.
+     */
     private List<Rect> getBoundingRects(List<MatOfPoint> contours) {
         List<Rect> boundingRects = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             Rect charRect = Imgproc.boundingRect(contour);
-            double aspectRatio = (double) charRect.width / charRect.height;
-            if (Utils.isCharSizeValid(charRect) && Utils.isAspectRatioValid(aspectRatio)) {
+            if (Utils.isCharSizeValid(charRect) && Utils.isAspectRatioValid((double) charRect.width / charRect.height)) {
                 boundingRects.add(charRect);
             }
         }
@@ -53,81 +55,14 @@ public class CharacterSegmenter {
         return boundingRects;
     }
 
+    /**
+     * Extracts and sorts images of each character based on their bounding rectangles.
+     */
     private List<Mat> sortCharImages(List<Rect> boundingRects, Mat grayPlate) {
         List<Mat> sortedCharImages = new ArrayList<>();
         for (Rect rect : boundingRects) {
             sortedCharImages.add(new Mat(grayPlate, rect));
         }
         return sortedCharImages;
-    }
-
-    private List<Mat> filterAndEnhanceCharacters(List<Mat> sortedCharImages, double mean, double stdDev) {
-        List<Mat> filteredChars = new ArrayList<>();
-        for (Mat charImg : sortedCharImages) {
-            double averageIntensity = calculateAverageIntensity(charImg);
-            if (Math.abs(averageIntensity - mean) <= 1.75 * stdDev) {
-                enhanceCharacter(charImg);
-                resizeCharacter(charImg);
-                filteredChars.add(charImg);
-            }
-        }
-        return filteredChars;
-    }
-
-    private void enhanceCharacter(Mat charImg) {
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
-        Imgproc.dilate(charImg, charImg, kernel);
-        Imgproc.erode(charImg, charImg, kernel);
-    }
-
-    private void resizeCharacter(Mat charImg) {
-        double aspectRatio = (double) charImg.width() / charImg.height();
-        int targetHeight = 48;
-        int targetWidth = (int) (targetHeight * aspectRatio);
-        Imgproc.resize(charImg, charImg, new Size(targetWidth, targetHeight));
-    }
-
-    private List<Integer> calculateDistances(List<Rect> boundingRects) {
-        List<Integer> distances = new ArrayList<>();
-        for (int i = 1; i < boundingRects.size(); i++) {
-            Rect prevRect = boundingRects.get(i - 1);
-            Rect currRect = boundingRects.get(i);
-            int distance = currRect.x - (prevRect.x + prevRect.width);
-            distances.add(distance);
-        }
-        return distances;
-    }
-
-    private List<Mat> insertSpaces(List<Mat> filteredChars, List<Integer> distances, double stdDev) {
-        List<Mat> charsWithSpaces = new ArrayList<>();
-        for (int i = 0; i < filteredChars.size(); i++) {
-            charsWithSpaces.add(filteredChars.get(i));
-            if (i < distances.size() && distances.get(i) > stdDev * 3) {
-                charsWithSpaces.add(Utils.createSpaceMat());
-            }
-        }
-        return charsWithSpaces;
-    }
-
-    private double calculateAverageIntensity(Mat image) {
-        if (image.channels() > 1) {
-            Mat gray = new Mat();
-            Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY);
-            return Core.mean(gray).val[0];
-        } else {
-            return Core.mean(image).val[0];
-        }
-    }
-
-    private double[] calculateMeanAndStdDev(List<Mat> images) {
-        List<Double> intensities = new ArrayList<>();
-        for (Mat img : images) {
-            intensities.add(calculateAverageIntensity(img));
-        }
-
-        double mean = intensities.stream().mapToDouble(val -> val).average().orElse(0.0);
-        double stdDev = Math.sqrt(intensities.stream().mapToDouble(val -> Math.pow(val - mean, 2)).average().orElse(0.0));
-
-        return new double[]{mean, stdDev};
     }
 }

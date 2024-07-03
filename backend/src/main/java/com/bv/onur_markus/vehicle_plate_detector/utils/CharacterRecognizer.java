@@ -15,13 +15,18 @@ public class CharacterRecognizer {
     private static final Logger LOGGER = LoggerFactory.getLogger(CharacterRecognizer.class);
     private final Map<Character, Mat> templates;
 
+    /**
+     * Constructs a CharacterRecognizer with a predefined set of character templates.
+     */
     public CharacterRecognizer(Map<Character, Mat> templates) {
         this.templates = templates;
     }
 
+    /**
+     * Extracts text from images of segmented characters by identifying each character's best match in templates.
+     */
     public String extractPlateText() {
         StringBuilder plateText = new StringBuilder();
-
         File segmentedDir = new File("src/main/resources/segmented_chars");
         File[] files = segmentedDir.listFiles((dir, name) -> name.startsWith("char_") && name.endsWith(".png"));
 
@@ -43,25 +48,29 @@ public class CharacterRecognizer {
         }
         return plateText.toString();
     }
+
+    /**
+     * Determines if an image is entirely dark (used to detect spaces between characters).
+     */
     private boolean isDarkSpaceMat(Mat charImg) {
-        return Core.mean(charImg).val[0] == 0;
+        return Core.mean(charImg).val[0] == 0; // True if the average intensity is 0 (black image).
     }
 
+    /**
+     * Compares the provided character image against all templates and returns the character with the closest match.
+     */
     private char findBestTemplateMatch(Mat charImg) {
         char bestMatch = '?';
         double bestMatchScore = Double.MAX_VALUE;
-
         for (Map.Entry<Character, Mat> entry : templates.entrySet()) {
             Mat result = new Mat();
             Imgproc.matchTemplate(charImg, entry.getValue(), result, Imgproc.TM_SQDIFF_NORMED);
             Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
-
             if (mmr.minVal < bestMatchScore) {
                 bestMatchScore = mmr.minVal;
                 bestMatch = entry.getKey();
             }
         }
-
         return bestMatch;
     }
 }
