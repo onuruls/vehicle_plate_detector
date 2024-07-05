@@ -9,15 +9,16 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 
 public class CharacterRecognizer {
     private static final Logger LOGGER = LoggerFactory.getLogger(CharacterRecognizer.class);
-    private final Map<Character, Mat> templates;
+    private final Map<Character, List<Mat>> templates;
 
-    public CharacterRecognizer(Map<Character, Mat> templates) {
+    public CharacterRecognizer(Map<Character, List<Mat>> templates) {
         this.templates = templates;
     }
 
@@ -52,16 +53,25 @@ public class CharacterRecognizer {
 
     private char findBestTemplateMatch(Mat charImg) {
         char bestMatch = '?';
-        double bestMatchScore = Double.MAX_VALUE;
+        double bestAverageScore = Double.MAX_VALUE;
 
-        for (Map.Entry<Character, Mat> entry : templates.entrySet()) {
-            Mat result = new Mat();
-            Imgproc.matchTemplate(charImg, entry.getValue(), result, Imgproc.TM_SQDIFF_NORMED);
-            Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
+        for (Map.Entry<Character, List<Mat>> entry : templates.entrySet()) {
+            char templateChar = entry.getKey();
+            List<Mat> templateVariants = entry.getValue();
+            double totalScore = 0.0;
 
-            if (mmr.minVal < bestMatchScore) {
-                bestMatchScore = mmr.minVal;
-                bestMatch = entry.getKey();
+            for (Mat template : templateVariants) {
+                Mat result = new Mat();
+                Imgproc.matchTemplate(charImg, template, result, Imgproc.TM_SQDIFF_NORMED);
+                Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
+                totalScore += mmr.minVal;
+            }
+
+            double averageScore = totalScore / templateVariants.size();
+
+            if (averageScore < bestAverageScore) {
+                bestAverageScore = averageScore;
+                bestMatch = templateChar;
             }
         }
 

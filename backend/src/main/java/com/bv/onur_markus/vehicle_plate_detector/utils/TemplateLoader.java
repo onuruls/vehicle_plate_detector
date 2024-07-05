@@ -4,12 +4,14 @@ import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public class TemplateLoader {
-    private final Map<Character, Mat> templates = new HashMap<>();
+    private final Map<Character, List<Mat>> templates = new HashMap<>();
 
     public TemplateLoader() {
         loadTemplates();
@@ -20,12 +22,17 @@ public class TemplateLoader {
         File dir = new File(templateDir);
 
         if (dir.exists() && dir.isDirectory()) {
-            for (File file : Objects.requireNonNull(dir.listFiles())) {
-                if (file.isFile() && file.getName().endsWith(".png")) {
-                    String name = file.getName().replace(".png", "");
-                    char templateChar = name.charAt(0);
-                    Mat template = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.IMREAD_GRAYSCALE);
-                    templates.put(templateChar, template);
+            for (File subdir : Objects.requireNonNull(dir.listFiles())) {
+                if (subdir.isDirectory()) {
+                    char templateChar = subdir.getName().charAt(0);
+                    List<Mat> templateVariants = new ArrayList<>();
+                    for (File file : Objects.requireNonNull(subdir.listFiles())) {
+                        if (file.isFile() && file.getName().endsWith(".png")) {
+                            Mat template = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.IMREAD_GRAYSCALE);
+                            templateVariants.add(template);
+                        }
+                    }
+                    templates.put(templateChar, templateVariants);
                 }
             }
         } else {
@@ -33,7 +40,7 @@ public class TemplateLoader {
         }
     }
 
-    public Map<Character, Mat> getTemplates() {
+    public Map<Character, List<Mat>> getTemplates() {
         return templates;
     }
 }
