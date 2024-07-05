@@ -9,9 +9,11 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+
 public class CharImageGenerator {
 
     static {
@@ -23,7 +25,7 @@ public class CharImageGenerator {
         int fontSize = 48;
         String outputDir = "src/main/resources/templates";
 
-        // Create the templates directory
+        // Create the base templates directory
         new File(outputDir).mkdirs();
 
         try {
@@ -31,14 +33,12 @@ public class CharImageGenerator {
 
             // Generate images for digits 0-9
             for (int digit = 0; digit < 10; digit++) {
-                BufferedImage img = createCharImage(String.valueOf(digit), font);
-                invertColorsAndSave(img, outputDir + "/" + digit + ".png");
+                generateRotatedImages(String.valueOf(digit), font, outputDir);
             }
 
             // Generate images for uppercase letters A-Z
             for (char c = 'A'; c <= 'Z'; c++) {
-                BufferedImage img = createCharImage(String.valueOf(c), font);
-                invertColorsAndSave(img, outputDir + "/" + c + ".png");
+                generateRotatedImages(String.valueOf(c), font, outputDir);
             }
 
             System.out.println("Templates generated and saved in 'templates' directory.");
@@ -47,7 +47,17 @@ public class CharImageGenerator {
         }
     }
 
-    private static BufferedImage createCharImage(String charStr, Font font) {
+    private static void generateRotatedImages(String charStr, Font font, String baseOutputDir) {
+        String charDir = baseOutputDir + "/" + charStr;
+        new File(charDir).mkdirs();
+
+        for (int angle = -20; angle <= 20; angle += 5) {
+            BufferedImage img = createCharImage(charStr, font, angle);
+            invertColorsAndSave(img, charDir + "/" + charStr + "_" + angle + ".png");
+        }
+    }
+
+    private static BufferedImage createCharImage(String charStr, Font font, int angle) {
         int imgWidth = 48;
         int imgHeight = 48;
         BufferedImage img = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_BYTE_GRAY);
@@ -56,6 +66,11 @@ public class CharImageGenerator {
         // Set white background
         g2d.setColor(Color.WHITE);
         g2d.fillRect(0, 0, imgWidth, imgHeight);
+
+        // Apply rotation
+        AffineTransform origTransform = g2d.getTransform();
+        AffineTransform rotTransform = AffineTransform.getRotateInstance(Math.toRadians(angle), imgWidth / 2, imgHeight / 2);
+        g2d.setTransform(rotTransform);
 
         // Set black text
         g2d.setColor(Color.BLACK);
@@ -70,6 +85,7 @@ public class CharImageGenerator {
 
         // Draw the character
         g2d.drawString(charStr, textX, textY);
+        g2d.setTransform(origTransform); // Restore original transform
         g2d.dispose();
 
         return img;

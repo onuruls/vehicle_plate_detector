@@ -30,7 +30,7 @@ public class ImagePreprocessor {
 
         // Apply adaptive thresholding
         Imgproc.adaptiveThreshold(blackhat, thresh, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 25, threshold);
-        Imgcodecs.imwrite("src/main/resources/thresh.bmp", thresh);
+//        Imgcodecs.imwrite("src/main/resources/thresh.bmp", thresh);
 
         return thresh;
     }

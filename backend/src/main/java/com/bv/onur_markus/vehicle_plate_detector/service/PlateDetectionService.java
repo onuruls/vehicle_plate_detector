@@ -4,6 +4,7 @@ import com.bv.onur_markus.vehicle_plate_detector.utils.*;
 import nu.pattern.OpenCV;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -78,10 +79,13 @@ public class PlateDetectionService {
         // Test multiple thresholds
         int[] thresholds = {15, 10, 5, 0};
         PlateDetectionResult bestResult = null;
+        List<Rect> allDetectedPlates = new ArrayList<>();
 
         for (int threshold : thresholds) {
             Mat processedImage = imagePreprocessor.preprocessImage(src, threshold);
             List<Rect> possiblePlates = plateDetector.detectPossiblePlates(processedImage);
+            allDetectedPlates.addAll(possiblePlates);
+
             for (Rect plateRect : possiblePlates) {
                 Mat normalizedPlate = Utils.normalizePlate(new Mat(src, plateRect));
                 List<Mat> segmentedChars = characterSegmenter.segmentCharacters(normalizedPlate);
@@ -95,8 +99,25 @@ public class PlateDetectionService {
         }
 
         if (bestResult != null) {
+            // Save the best processed image
             Imgcodecs.imwrite("src/main/resources/best_thresh_image.bmp", bestResult.processedImage);
-            Imgcodecs.imwrite("src/main/resources/best_plate_image.bmp", new Mat(src, bestResult.rect()));
+
+            // Draw rectangles around the detected plate on the best threshold image
+            Mat bestThreshImageWithRectangles = bestResult.processedImage.clone();
+            Imgproc.rectangle(bestThreshImageWithRectangles, bestResult.rect(), new Scalar(0, 255, 0), 5); // Dickere Linie (5)
+            Imgcodecs.imwrite("src/main/resources/best_thresh_image_with_rectangles.bmp", bestThreshImageWithRectangles);
+
+            // Draw rectangles around all detected plates on the original image
+            Mat originalImageWithRectangles = src.clone();
+            for (Rect plate : allDetectedPlates) {
+                Imgproc.rectangle(originalImageWithRectangles, plate, new Scalar(0, 0, 255), 5); // Dickere Linie (5)
+            }
+            Imgcodecs.imwrite("src/main/resources/all_detected_plates.bmp", originalImageWithRectangles);
+
+            // Draw rectangle around the best detected plate on the original image
+            Mat originalImageWithBestPlate = src.clone();
+            Imgproc.rectangle(originalImageWithBestPlate, bestResult.rect(), new Scalar(0, 255, 0), 5); // Dickere Linie (5)
+            Imgcodecs.imwrite("src/main/resources/best_detected_plate.bmp", originalImageWithBestPlate);
 
             // Extract plate text
             return characterRecognizer.extractPlateText();

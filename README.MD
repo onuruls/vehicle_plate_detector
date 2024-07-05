@@ -22,9 +22,9 @@ Dies ist ein Projekt zur Erkennung von Fahrzeug-Kennzeichen mithilfe einer Live-
 
 1. Öffnen Sie das `backend` Projekt in Ihrem bevorzugten Java-Compiler (z.B. IntelliJ IDEA, Eclipse).
 
-2. Stellen Sie sicher, dass Sie die OpenCV-Bibliothek in Ihrem Projektpfad hinzufügen. Fügen Sie die folgende Konfiguration hinzu:
+2. Stellen Sie sicher, dass Sie die OpenCV-Bibliothek in Ihrem Projektpfad hinzufügen. Fügen Sie die folgende Konfiguration (VM Option/Argument) hinzu:
     ```sh
-    -Djava.library.path=C:\path\to\opencv\build\java\x64
+    -Djava.library.path=X:\path\to\opencv\build\java\x64
     ```
 
 4. Starten Sie die Spring Boot Anwendung über die Hauptklasse des Projekts.
@@ -40,7 +40,7 @@ Falls Sie das Backend über die Kommandozeile starten möchten, führen Sie folg
 
 2. Stellen Sie sicher, dass Sie die OpenCV-Bibliothek in Ihrem Projektpfad hinzufügen. Fügen Sie die folgende Konfiguration hinzu:
     ```sh
-    export JAVA_OPTS="-Djava.library.path=C:\path\to\opencv\build\java\x64"
+    export JAVA_OPTS="-Djava.library.path=X:\path\to\opencv\build\java\x64"
     ```
 
 3. Bauen und starten Sie die Spring Boot Anwendung:
