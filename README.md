@@ -73,6 +73,7 @@ curl -X POST -F "file=@plate.jpg" http://localhost:8080/api/detect
 ```
 
 **Response:**
+
 ```json
 {
   "plateText": "KI AB 123",
@@ -99,6 +100,7 @@ curl http://localhost:8080/api/city-codes/HH
 ```
 
 **Response:**
+
 ```json
 {
   "code": "HH",
@@ -108,21 +110,21 @@ curl http://localhost:8080/api/city-codes/HH
 
 ### Response Status Codes
 
-| Status | Description |
-|--------|-------------|
-| `OK` | Plate detected successfully |
+| Status     | Description                     |
+| ---------- | ------------------------------- |
+| `OK`       | Plate detected successfully     |
 | `NO_PLATE` | No license plate found in image |
-| `ERROR` | Processing error occurred |
+| `ERROR`    | Processing error occurred       |
 
 ## Configuration
 
 ### Backend (`application.properties`)
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `server.port` | `8080` | API server port |
-| `app.debug.enabled` | `false` | Save debug images |
-| `app.debug.dir` | `${java.io.tmpdir}/vehicle-plate-debug` | Debug output directory |
+| Property            | Default                                 | Description            |
+| ------------------- | --------------------------------------- | ---------------------- |
+| `server.port`       | `8080`                                  | API server port        |
+| `app.debug.enabled` | `false`                                 | Save debug images      |
+| `app.debug.dir`     | `${java.io.tmpdir}/vehicle-plate-debug` | Debug output directory |
 
 ### Frontend
 
@@ -153,22 +155,6 @@ The backend uses [openpnp-opencv](https://github.com/openpnp/opencv) which inclu
 
 1. Ensure you're using Java 17+
 2. Check your OS/architecture is supported (Windows/Linux/macOS, x64/arm64)
-
-### Port Conflicts
-
-If port 8080 or 3000 is in use:
-
-```bash
-# Backend: change in application.properties
-server.port=8081
-
-# Frontend: set PORT env variable
-PORT=3001 npm start
-```
-
-### CORS Issues
-
-CORS is configured in `WebConfig.java`. For production, update the allowed origins.
 
 ## Project Structure
 

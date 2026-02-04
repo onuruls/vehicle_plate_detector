@@ -13,7 +13,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Standalone utility for generating character template images.
@@ -35,36 +34,26 @@ public class CharImageGenerator {
         // Create the base templates directory
         new File(outputDir).mkdirs();
 
-        try {
-            // Load font from classpath or file
-            Font font = loadFont(fontSize);
+        // Load system font
+        Font font = loadFont(fontSize);
 
-            // Generate images for digits 0-9
-            for (int digit = 0; digit < 10; digit++) {
-                generateRotatedImages(String.valueOf(digit), font, outputDir);
-            }
-
-            // Generate images for uppercase letters A-Z
-            for (char c = 'A'; c <= 'Z'; c++) {
-                generateRotatedImages(String.valueOf(c), font, outputDir);
-            }
-
-            System.out.println("Templates generated and saved in '" + outputDir + "' directory.");
-            System.out.println("Copy these to src/main/resources/templates/ if needed.");
-        } catch (FontFormatException | IOException e) {
-            e.printStackTrace();
+        // Generate images for digits 0-9
+        for (int digit = 0; digit < 10; digit++) {
+            generateRotatedImages(String.valueOf(digit), font, outputDir);
         }
+
+        // Generate images for uppercase letters A-Z
+        for (char c = 'A'; c <= 'Z'; c++) {
+            generateRotatedImages(String.valueOf(c), font, outputDir);
+        }
+
+        System.out.println("Templates generated and saved in '" + outputDir + "' directory.");
+        System.out.println("Copy these to src/main/resources/templates/ if needed.");
     }
 
-    private static Font loadFont(int fontSize) throws FontFormatException, IOException {
-        // Try to load from classpath first
-        try (InputStream is = CharImageGenerator.class.getResourceAsStream("/fonts/CARGO2.TTF")) {
-            if (is != null) {
-                return Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(Font.PLAIN, (float) fontSize);
-            }
-        }
-        // Fallback to a system monospace font
-        return new Font(Font.MONOSPACED, Font.PLAIN, fontSize);
+    private static Font loadFont(int fontSize) {
+        // Use a system monospace font (universally available, no license issues)
+        return new Font(Font.MONOSPACED, Font.BOLD, fontSize);
     }
 
     private static void generateRotatedImages(String charStr, Font font, String baseOutputDir) {
