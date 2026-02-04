@@ -1,22 +1,19 @@
 package com.bv.onur_markus.vehicle_plate_detector.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-@Document(collection = "cityCodes")
+/**
+ * Represents a German license plate prefix and its corresponding city/district.
+ */
 public class CityCode {
 
-    @Id
-    private String id;
     private String code;
     private String city;
 
-    public String getId() {
-        return id;
+    public CityCode() {
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public CityCode(String code, String city) {
+        this.code = code;
+        this.city = city;
     }
 
     public String getCode() {

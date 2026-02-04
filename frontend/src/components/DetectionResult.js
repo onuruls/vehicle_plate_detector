@@ -1,62 +1,48 @@
-import React, { useState, useEffect } from "react";
-import useCityCodes from "../hooks/useCityCodes";
+import React from "react";
 
 const DetectionResult = ({ result, loading, error }) => {
-  const { cityName, getCityNameByCode, addCityName, cityLoading } =
-    useCityCodes();
-
-  const [cityNameInput, setCityNameInput] = useState("");
-
-  useEffect(() => {
-    if (result && result !== "Not found") {
-      const code = result.split(" ")[0];
-      getCityNameByCode(code);
-    }
-  }, [result]);
-
-  const handleCityNameSubmit = async () => {
-    if (cityNameInput.trim()) {
-      const newCity = {
-        code: result.split(" ")[0],
-        city: cityNameInput.trim(),
-      };
-      await addCityName(newCity);
-      setCityNameInput("");
-      getCityNameByCode(newCity.code);
-    }
-  };
+  const hasResult = result && result.status === "OK";
+  const noPlate = result && result.status === "NO_PLATE";
+  const hasError = result && result.status === "ERROR";
 
   return (
     <div className="w-full mt-6 text-center bg-gray-700 p-4 rounded-md">
       <h2 className="text-2xl font-bold mb-2 text-blue-500">
-        Detection Result:
+        Detection Result
       </h2>
-      {loading ? <p className="text-blue-500 mt-4">Loading...</p> : null}
-      {error ? <p className="text-red-500 mt-4">{error}</p> : null}
-      {result && <p className="text-lg">{result}</p>}
-      {result && result !== "Not found" && !cityLoading && cityName && (
-        <p className="text-green-500 mt-4">City: {cityName.city}</p>
-      )}
-      {result && result !== "Not found" && !cityLoading && !cityName && (
-        <div className="mt-4">
-          <p className="text-red-500">
-            City information not found. Please input the city name:
+
+      {loading && <p className="text-blue-500 mt-4">Detecting...</p>}
+
+      {error && <p className="text-red-500 mt-4">{error}</p>}
+
+      {hasResult && (
+        <div className="mt-4 space-y-2">
+          <p className="text-lg font-mono bg-gray-800 p-2 rounded">
+            {result.plateText}
           </p>
-          <input
-            type="text"
-            value={cityNameInput}
-            onChange={(e) => setCityNameInput(e.target.value)}
-            className="w-full px-4 py-2 text-black bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter city name"
-          />
-          <button
-            type="button"
-            onClick={handleCityNameSubmit}
-            className="mt-2 px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Submit
-          </button>
+          {result.prefix && (
+            <p className="text-gray-300">
+              Prefix: <span className="text-white font-semibold">{result.prefix}</span>
+            </p>
+          )}
+          {result.city ? (
+            <p className="text-green-500">
+              City: <span className="font-semibold">{result.city}</span>
+            </p>
+          ) : (
+            result.prefix && (
+              <p className="text-yellow-500">City: Unknown</p>
+            )
+          )}
         </div>
+      )}
+
+      {noPlate && (
+        <p className="text-yellow-500 mt-4">No license plate detected</p>
+      )}
+
+      {hasError && (
+        <p className="text-red-500 mt-4">{result.error}</p>
       )}
     </div>
   );

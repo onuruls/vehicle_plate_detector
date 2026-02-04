@@ -1,0 +1,982 @@
+[
+    {
+        "code": "A",
+        "city": "Augsburg"
+    },
+    {
+        "code": "AA",
+        "city": "Aalen (Ostalbkreis)"
+    },
+    {
+        "code": "AB",
+        "city": "Aschaffenburg"
+    },
+    {
+        "code": "AC",
+        "city": "Aachen"
+    },
+    {
+        "code": "AIC",
+        "city": "Aichach-Friedberg"
+    },
+    {
+        "code": "AN",
+        "city": "Ansbach"
+    },
+    {
+        "code": "AS",
+        "city": "Amberg-Sulzbach"
+    },
+    {
+        "code": "AW",
+        "city": "Ahrweiler"
+    },
+    {
+        "code": "AZ",
+        "city": "Alzey-Worms"
+    },
+    {
+        "code": "B",
+        "city": "Berlin"
+    },
+    {
+        "code": "BA",
+        "city": "Bamberg"
+    },
+    {
+        "code": "BB",
+        "city": "Böblingen"
+    },
+    {
+        "code": "BC",
+        "city": "Biberach"
+    },
+    {
+        "code": "BL",
+        "city": "Zollernalbkreis (Balingen)"
+    },
+    {
+        "code": "BN",
+        "city": "Bonn"
+    },
+    {
+        "code": "BO",
+        "city": "Bochum"
+    },
+    {
+        "code": "BT",
+        "city": "Bayreuth"
+    },
+    {
+        "code": "C",
+        "city": "Chemnitz"
+    },
+    {
+        "code": "CE",
+        "city": "Celle"
+    },
+    {
+        "code": "CLP",
+        "city": "Cloppenburg"
+    },
+    {
+        "code": "CO",
+        "city": "Coburg"
+    },
+    {
+        "code": "COE",
+        "city": "Coesfeld"
+    },
+    {
+        "code": "CUX",
+        "city": "Cuxhaven"
+    },
+    {
+        "code": "D",
+        "city": "Düsseldorf"
+    },
+    {
+        "code": "DA",
+        "city": "Darmstadt"
+    },
+    {
+        "code": "DAH",
+        "city": "Dachau"
+    },
+    {
+        "code": "DAN",
+        "city": "Lüchow-Dannenberg"
+    },
+    {
+        "code": "DEL",
+        "city": "Delmenhorst"
+    },
+    {
+        "code": "DH",
+        "city": "Diepholz"
+    },
+    {
+        "code": "DN",
+        "city": "Düren"
+    },
+    {
+        "code": "DO",
+        "city": "Dortmund"
+    },
+    {
+        "code": "DU",
+        "city": "Duisburg"
+    },
+    {
+        "code": "E",
+        "city": "Essen"
+    },
+    {
+        "code": "ED",
+        "city": "Erding"
+    },
+    {
+        "code": "EF",
+        "city": "Erfurt"
+    },
+    {
+        "code": "EI",
+        "city": "Eichstätt"
+    },
+    {
+        "code": "EM",
+        "city": "Emmendingen"
+    },
+    {
+        "code": "EMD",
+        "city": "Emden"
+    },
+    {
+        "code": "ER",
+        "city": "Erlangen"
+    },
+    {
+        "code": "ES",
+        "city": "Esslingen"
+    },
+    {
+        "code": "EU",
+        "city": "Euskirchen"
+    },
+    {
+        "code": "F",
+        "city": "Frankfurt am Main"
+    },
+    {
+        "code": "FB",
+        "city": "Wetteraukreis (Friedberg)"
+    },
+    {
+        "code": "FD",
+        "city": "Fulda"
+    },
+    {
+        "code": "FFB",
+        "city": "Fürstenfeldbruck"
+    },
+    {
+        "code": "FL",
+        "city": "Flensburg"
+    },
+    {
+        "code": "FN",
+        "city": "Bodenseekreis (Friedrichshafen)"
+    },
+    {
+        "code": "FR",
+        "city": "Freiburg im Breisgau"
+    },
+    {
+        "code": "FS",
+        "city": "Freising"
+    },
+    {
+        "code": "FÜ",
+        "city": "Fürth"
+    },
+    {
+        "code": "G",
+        "city": "Gera"
+    },
+    {
+        "code": "GAP",
+        "city": "Garmisch-Partenkirchen"
+    },
+    {
+        "code": "GE",
+        "city": "Gelsenkirchen"
+    },
+    {
+        "code": "GG",
+        "city": "Groß-Gerau"
+    },
+    {
+        "code": "GI",
+        "city": "Gießen"
+    },
+    {
+        "code": "GL",
+        "city": "Rheinisch-Bergischer Kreis (Bergisch Gladbach)"
+    },
+    {
+        "code": "GÖ",
+        "city": "Göttingen"
+    },
+    {
+        "code": "GP",
+        "city": "Göppingen"
+    },
+    {
+        "code": "GR",
+        "city": "Görlitz"
+    },
+    {
+        "code": "GS",
+        "city": "Goslar"
+    },
+    {
+        "code": "GT",
+        "city": "Gütersloh"
+    },
+    {
+        "code": "GZ",
+        "city": "Günzburg"
+    },
+    {
+        "code": "H",
+        "city": "Hannover"
+    },
+    {
+        "code": "HA",
+        "city": "Hagen"
+    },
+    {
+        "code": "HAM",
+        "city": "Hamm"
+    },
+    {
+        "code": "HB",
+        "city": "Bremen"
+    },
+    {
+        "code": "HD",
+        "city": "Heidelberg"
+    },
+    {
+        "code": "HDH",
+        "city": "Heidenheim"
+    },
+    {
+        "code": "HE",
+        "city": "Helmstedt"
+    },
+    {
+        "code": "HER",
+        "city": "Herne"
+    },
+    {
+        "code": "HF",
+        "city": "Herford"
+    },
+    {
+        "code": "HG",
+        "city": "Hochtaunuskreis"
+    },
+    {
+        "code": "HH",
+        "city": "Hamburg"
+    },
+    {
+        "code": "HI",
+        "city": "Hildesheim"
+    },
+    {
+        "code": "HK",
+        "city": "Heidekreis"
+    },
+    {
+        "code": "HL",
+        "city": "Lübeck"
+    },
+    {
+        "code": "HM",
+        "city": "Hameln-Pyrmont"
+    },
+    {
+        "code": "HN",
+        "city": "Heilbronn"
+    },
+    {
+        "code": "HO",
+        "city": "Hof"
+    },
+    {
+        "code": "HOL",
+        "city": "Holzminden"
+    },
+    {
+        "code": "HP",
+        "city": "Bergstraße (Heppenheim)"
+    },
+    {
+        "code": "HR",
+        "city": "Schwalm-Eder-Kreis (Homberg)"
+    },
+    {
+        "code": "HS",
+        "city": "Heinsberg"
+    },
+    {
+        "code": "HU",
+        "city": "Main-Kinzig-Kreis (Hanau)"
+    },
+    {
+        "code": "HX",
+        "city": "Höxter"
+    },
+    {
+        "code": "IZ",
+        "city": "Steinburg (Itzehoe)"
+    },
+    {
+        "code": "J",
+        "city": "Jena"
+    },
+    {
+        "code": "K",
+        "city": "Köln"
+    },
+    {
+        "code": "KA",
+        "city": "Karlsruhe"
+    },
+    {
+        "code": "KB",
+        "city": "Waldeck-Frankenberg (Korbach)"
+    },
+    {
+        "code": "KC",
+        "city": "Kronach"
+    },
+    {
+        "code": "KE",
+        "city": "Kempten (Allgäu)"
+    },
+    {
+        "code": "KEH",
+        "city": "Kelheim"
+    },
+    {
+        "code": "KF",
+        "city": "Kaufbeuren"
+    },
+    {
+        "code": "KG",
+        "city": "Bad Kissingen"
+    },
+    {
+        "code": "KI",
+        "city": "Kiel"
+    },
+    {
+        "code": "KL",
+        "city": "Kaiserslautern"
+    },
+    {
+        "code": "KN",
+        "city": "Konstanz"
+    },
+    {
+        "code": "KO",
+        "city": "Koblenz"
+    },
+    {
+        "code": "KR",
+        "city": "Krefeld"
+    },
+    {
+        "code": "KS",
+        "city": "Kassel"
+    },
+    {
+        "code": "KT",
+        "city": "Kitzingen"
+    },
+    {
+        "code": "KU",
+        "city": "Kulmbach"
+    },
+    {
+        "code": "L",
+        "city": "Leipzig"
+    },
+    {
+        "code": "LA",
+        "city": "Landshut"
+    },
+    {
+        "code": "LAU",
+        "city": "Nürnberger Land (Lauf)"
+    },
+    {
+        "code": "LB",
+        "city": "Ludwigsburg"
+    },
+    {
+        "code": "LD",
+        "city": "Landau in der Pfalz"
+    },
+    {
+        "code": "LDK",
+        "city": "Lahn-Dill-Kreis"
+    },
+    {
+        "code": "LER",
+        "city": "Leer"
+    },
+    {
+        "code": "LEV",
+        "city": "Leverkusen"
+    },
+    {
+        "code": "LG",
+        "city": "Lüneburg"
+    },
+    {
+        "code": "LI",
+        "city": "Lindau (Bodensee)"
+    },
+    {
+        "code": "LIF",
+        "city": "Lichtenfels"
+    },
+    {
+        "code": "LL",
+        "city": "Landsberg am Lech"
+    },
+    {
+        "code": "LÖ",
+        "city": "Lörrach"
+    },
+    {
+        "code": "LU",
+        "city": "Ludwigshafen am Rhein"
+    },
+    {
+        "code": "M",
+        "city": "München"
+    },
+    {
+        "code": "MA",
+        "city": "Mannheim"
+    },
+    {
+        "code": "MB",
+        "city": "Miesbach"
+    },
+    {
+        "code": "MD",
+        "city": "Magdeburg"
+    },
+    {
+        "code": "ME",
+        "city": "Mettmann"
+    },
+    {
+        "code": "MG",
+        "city": "Mönchengladbach"
+    },
+    {
+        "code": "MH",
+        "city": "Mülheim an der Ruhr"
+    },
+    {
+        "code": "MK",
+        "city": "Märkischer Kreis"
+    },
+    {
+        "code": "MM",
+        "city": "Memmingen"
+    },
+    {
+        "code": "MN",
+        "city": "Unterallgäu (Mindelheim)"
+    },
+    {
+        "code": "MO",
+        "city": "Moers"
+    },
+    {
+        "code": "MOS",
+        "city": "Neckar-Odenwald-Kreis (Mosbach)"
+    },
+    {
+        "code": "MR",
+        "city": "Marburg-Biedenkopf"
+    },
+    {
+        "code": "MS",
+        "city": "Münster"
+    },
+    {
+        "code": "MSP",
+        "city": "Main-Spessart"
+    },
+    {
+        "code": "MTK",
+        "city": "Main-Taunus-Kreis"
+    },
+    {
+        "code": "MÜ",
+        "city": "Mühldorf am Inn"
+    },
+    {
+        "code": "MZ",
+        "city": "Mainz"
+    },
+    {
+        "code": "N",
+        "city": "Nürnberg"
+    },
+    {
+        "code": "NB",
+        "city": "Neubrandenburg"
+    },
+    {
+        "code": "ND",
+        "city": "Neuburg-Schrobenhausen"
+    },
+    {
+        "code": "NE",
+        "city": "Neuss"
+    },
+    {
+        "code": "NEA",
+        "city": "Neustadt an der Aisch-Bad Windsheim"
+    },
+    {
+        "code": "NEW",
+        "city": "Neustadt an der Waldnaab"
+    },
+    {
+        "code": "NF",
+        "city": "Nordfriesland"
+    },
+    {
+        "code": "NI",
+        "city": "Nienburg (Weser)"
+    },
+    {
+        "code": "NM",
+        "city": "Neumarkt in der Oberpfalz"
+    },
+    {
+        "code": "NMS",
+        "city": "Neumünster"
+    },
+    {
+        "code": "NOH",
+        "city": "Grafschaft Bentheim (Nordhorn)"
+    },
+    {
+        "code": "NOM",
+        "city": "Northeim"
+    },
+    {
+        "code": "NR",
+        "city": "Neuwied"
+    },
+    {
+        "code": "NU",
+        "city": "Neu-Ulm"
+    },
+    {
+        "code": "NW",
+        "city": "Neustadt an der Weinstraße"
+    },
+    {
+        "code": "OA",
+        "city": "Oberallgäu"
+    },
+    {
+        "code": "OAL",
+        "city": "Ostallgäu"
+    },
+    {
+        "code": "OB",
+        "city": "Oberhausen"
+    },
+    {
+        "code": "OD",
+        "city": "Stormarn (Bad Oldesloe)"
+    },
+    {
+        "code": "OF",
+        "city": "Offenbach am Main"
+    },
+    {
+        "code": "OG",
+        "city": "Ortenaukreis (Offenburg)"
+    },
+    {
+        "code": "OH",
+        "city": "Ostholstein"
+    },
+    {
+        "code": "OHV",
+        "city": "Oberhavel"
+    },
+    {
+        "code": "OL",
+        "city": "Oldenburg"
+    },
+    {
+        "code": "OP",
+        "city": "Opladen"
+    },
+    {
+        "code": "OS",
+        "city": "Osnabrück"
+    },
+    {
+        "code": "OTT",
+        "city": "Otterndorf"
+    },
+    {
+        "code": "P",
+        "city": "Potsdam"
+    },
+    {
+        "code": "PA",
+        "city": "Passau"
+    },
+    {
+        "code": "PAF",
+        "city": "Pfaffenhofen an der Ilm"
+    },
+    {
+        "code": "PAN",
+        "city": "Rottal-Inn (Pfarrkirchen)"
+    },
+    {
+        "code": "PB",
+        "city": "Paderborn"
+    },
+    {
+        "code": "PE",
+        "city": "Peine"
+    },
+    {
+        "code": "PF",
+        "city": "Pforzheim"
+    },
+    {
+        "code": "PI",
+        "city": "Pinneberg"
+    },
+    {
+        "code": "PLÖ",
+        "city": "Plön"
+    },
+    {
+        "code": "PS",
+        "city": "Pirmasens"
+    },
+    {
+        "code": "R",
+        "city": "Regensburg"
+    },
+    {
+        "code": "RA",
+        "city": "Rastatt"
+    },
+    {
+        "code": "RD",
+        "city": "Rendsburg-Eckernförde"
+    },
+    {
+        "code": "RE",
+        "city": "Recklinghausen"
+    },
+    {
+        "code": "REG",
+        "city": "Regen"
+    },
+    {
+        "code": "RO",
+        "city": "Rosenheim"
+    },
+    {
+        "code": "ROW",
+        "city": "Rotenburg (Wümme)"
+    },
+    {
+        "code": "RS",
+        "city": "Remscheid"
+    },
+    {
+        "code": "RT",
+        "city": "Reutlingen"
+    },
+    {
+        "code": "RÜD",
+        "city": "Rheingau-Taunus-Kreis (Rüdesheim)"
+    },
+    {
+        "code": "RV",
+        "city": "Ravensburg"
+    },
+    {
+        "code": "RW",
+        "city": "Rottweil"
+    },
+    {
+        "code": "RZ",
+        "city": "Herzogtum Lauenburg (Ratzeburg)"
+    },
+    {
+        "code": "S",
+        "city": "Stuttgart"
+    },
+    {
+        "code": "SAD",
+        "city": "Schwandorf"
+    },
+    {
+        "code": "SAW",
+        "city": "Altmarkkreis Salzwedel"
+    },
+    {
+        "code": "SB",
+        "city": "Saarbrücken"
+    },
+    {
+        "code": "SC",
+        "city": "Schwabach"
+    },
+    {
+        "code": "SE",
+        "city": "Segeberg"
+    },
+    {
+        "code": "SG",
+        "city": "Solingen"
+    },
+    {
+        "code": "SHA",
+        "city": "Schwäbisch Hall"
+    },
+    {
+        "code": "SHG",
+        "city": "Schaumburg"
+    },
+    {
+        "code": "SI",
+        "city": "Siegen-Wittgenstein"
+    },
+    {
+        "code": "SIM",
+        "city": "Rhein-Hunsrück-Kreis (Simmern)"
+    },
+    {
+        "code": "SK",
+        "city": "Saalekreis"
+    },
+    {
+        "code": "SL",
+        "city": "Schleswig-Flensburg"
+    },
+    {
+        "code": "SLS",
+        "city": "Saarlouis"
+    },
+    {
+        "code": "SO",
+        "city": "Soest"
+    },
+    {
+        "code": "SOK",
+        "city": "Saale-Orla-Kreis"
+    },
+    {
+        "code": "SP",
+        "city": "Speyer"
+    },
+    {
+        "code": "SR",
+        "city": "Straubing"
+    },
+    {
+        "code": "ST",
+        "city": "Steinfurt"
+    },
+    {
+        "code": "STA",
+        "city": "Starnberg"
+    },
+    {
+        "code": "STD",
+        "city": "Stade"
+    },
+    {
+        "code": "SU",
+        "city": "Rhein-Sieg-Kreis (Siegburg)"
+    },
+    {
+        "code": "SÜW",
+        "city": "Südliche Weinstraße"
+    },
+    {
+        "code": "SW",
+        "city": "Schweinfurt"
+    },
+    {
+        "code": "TBB",
+        "city": "Main-Tauber-Kreis (Tauberbischofsheim)"
+    },
+    {
+        "code": "TIR",
+        "city": "Tirschenreuth"
+    },
+    {
+        "code": "TO",
+        "city": "Torgau"
+    },
+    {
+        "code": "TR",
+        "city": "Trier"
+    },
+    {
+        "code": "TS",
+        "city": "Traunstein"
+    },
+    {
+        "code": "TÜ",
+        "city": "Tübingen"
+    },
+    {
+        "code": "UE",
+        "city": "Uelzen"
+    },
+    {
+        "code": "UL",
+        "city": "Ulm"
+    },
+    {
+        "code": "UN",
+        "city": "Unna"
+    },
+    {
+        "code": "V",
+        "city": "Vogtlandkreis"
+    },
+    {
+        "code": "VB",
+        "city": "Vogelsbergkreis"
+    },
+    {
+        "code": "VEC",
+        "city": "Vechta"
+    },
+    {
+        "code": "VER",
+        "city": "Verden"
+    },
+    {
+        "code": "W",
+        "city": "Wuppertal"
+    },
+    {
+        "code": "WA",
+        "city": "Waldeck-Frankenberg"
+    },
+    {
+        "code": "WAF",
+        "city": "Warendorf"
+    },
+    {
+        "code": "WB",
+        "city": "Wittenberg"
+    },
+    {
+        "code": "WE",
+        "city": "Weimar"
+    },
+    {
+        "code": "WEN",
+        "city": "Weiden in der Oberpfalz"
+    },
+    {
+        "code": "WES",
+        "city": "Wesel"
+    },
+    {
+        "code": "WF",
+        "city": "Wolfenbüttel"
+    },
+    {
+        "code": "WG",
+        "city": "Wangen im Allgäu"
+    },
+    {
+        "code": "WI",
+        "city": "Wiesbaden"
+    },
+    {
+        "code": "WL",
+        "city": "Harburg (Winsen)"
+    },
+    {
+        "code": "WM",
+        "city": "Weilheim-Schongau"
+    },
+    {
+        "code": "WN",
+        "city": "Rems-Murr-Kreis (Waiblingen)"
+    },
+    {
+        "code": "WND",
+        "city": "St. Wendel"
+    },
+    {
+        "code": "WO",
+        "city": "Worms"
+    },
+    {
+        "code": "WOB",
+        "city": "Wolfsburg"
+    },
+    {
+        "code": "WR",
+        "city": "Wernigerode"
+    },
+    {
+        "code": "WS",
+        "city": "Wasserburg am Inn"
+    },
+    {
+        "code": "WT",
+        "city": "Waldshut"
+    },
+    {
+        "code": "WÜ",
+        "city": "Würzburg"
+    },
+    {
+        "code": "WUG",
+        "city": "Weißenburg-Gunzenhausen"
+    },
+    {
+        "code": "WUN",
+        "city": "Wunsiedel im Fichtelgebirge"
+    },
+    {
+        "code": "Z",
+        "city": "Zwickau"
+    }
+]

@@ -13,7 +13,15 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
+/**
+ * Standalone utility for generating character template images.
+ * Run this class directly to regenerate templates.
+ * 
+ * Usage: java CharImageGenerator [outputDir]
+ * Default output: ./generated-templates
+ */
 public class CharImageGenerator {
 
     static {
@@ -21,15 +29,15 @@ public class CharImageGenerator {
     }
 
     public static void main(String[] args) {
-        String fontPath = "src/main/resources/fonts/CARGO2.TTF";
+        String outputDir = args.length > 0 ? args[0] : "./generated-templates";
         int fontSize = 48;
-        String outputDir = "src/main/resources/templates";
 
         // Create the base templates directory
         new File(outputDir).mkdirs();
 
         try {
-            Font font = Font.createFont(Font.TRUETYPE_FONT, new File(fontPath)).deriveFont(Font.PLAIN, fontSize);
+            // Load font from classpath or file
+            Font font = loadFont(fontSize);
 
             // Generate images for digits 0-9
             for (int digit = 0; digit < 10; digit++) {
@@ -41,10 +49,22 @@ public class CharImageGenerator {
                 generateRotatedImages(String.valueOf(c), font, outputDir);
             }
 
-            System.out.println("Templates generated and saved in 'templates' directory.");
+            System.out.println("Templates generated and saved in '" + outputDir + "' directory.");
+            System.out.println("Copy these to src/main/resources/templates/ if needed.");
         } catch (FontFormatException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static Font loadFont(int fontSize) throws FontFormatException, IOException {
+        // Try to load from classpath first
+        try (InputStream is = CharImageGenerator.class.getResourceAsStream("/fonts/CARGO2.TTF")) {
+            if (is != null) {
+                return Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(Font.PLAIN, (float) fontSize);
+            }
+        }
+        // Fallback to a system monospace font
+        return new Font(Font.MONOSPACED, Font.PLAIN, fontSize);
     }
 
     private static void generateRotatedImages(String charStr, Font font, String baseOutputDir) {
@@ -69,7 +89,8 @@ public class CharImageGenerator {
 
         // Apply rotation
         AffineTransform origTransform = g2d.getTransform();
-        AffineTransform rotTransform = AffineTransform.getRotateInstance(Math.toRadians(angle), imgWidth / 2, imgHeight / 2);
+        AffineTransform rotTransform = AffineTransform.getRotateInstance(Math.toRadians(angle), imgWidth / 2.0,
+                imgHeight / 2.0);
         g2d.setTransform(rotTransform);
 
         // Set black text
@@ -85,7 +106,7 @@ public class CharImageGenerator {
 
         // Draw the character
         g2d.drawString(charStr, textX, textY);
-        g2d.setTransform(origTransform); // Restore original transform
+        g2d.setTransform(origTransform);
         g2d.dispose();
 
         return img;

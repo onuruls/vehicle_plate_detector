@@ -7,6 +7,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +16,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 @Service
@@ -25,13 +28,19 @@ public class PlateDetectionService {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PlateDetectionService.class);
+
+    @Value("${app.debug.enabled:false}")
+    private boolean debugEnabled;
+
+    @Value("${app.debug.dir:${java.io.tmpdir}/vehicle-plate-debug}")
+    private String debugDir;
+
     private final ImagePreprocessor imagePreprocessor;
     private final PlateDetector plateDetector;
     private final CharacterSegmenter characterSegmenter;
     private final CharacterRecognizer characterRecognizer;
 
-    public PlateDetectionService() {
-        TemplateLoader templateLoader = new TemplateLoader();
+    public PlateDetectionService(TemplateLoader templateLoader) {
         this.imagePreprocessor = new ImagePreprocessor();
         this.plateDetector = new PlateDetector();
         this.characterSegmenter = new CharacterSegmenter();
@@ -40,9 +49,13 @@ public class PlateDetectionService {
 
     public String detectPlate(MultipartFile file) {
         try {
-            File convFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
-            file.transferTo(convFile);
-            return detectPlateFromFile(convFile);
+            Path tempFile = Files.createTempFile("plate-", "-" + file.getOriginalFilename());
+            file.transferTo(tempFile.toFile());
+            try {
+                return detectPlateFromFile(tempFile.toFile());
+            } finally {
+                Files.deleteIfExists(tempFile);
+            }
         } catch (IOException e) {
             LOGGER.error("Error processing file", e);
             return "Error processing file";
@@ -59,10 +72,14 @@ public class PlateDetectionService {
             byte[] decodedBytes = Base64.getDecoder().decode(imageString);
 
             BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(decodedBytes));
-            File imageFile = new File("received_image.png");
-            ImageIO.write(bufferedImage, "png", imageFile);
+            Path tempFile = Files.createTempFile("plate-base64-", ".png");
+            ImageIO.write(bufferedImage, "png", tempFile.toFile());
 
-            return detectPlateFromFile(imageFile);
+            try {
+                return detectPlateFromFile(tempFile.toFile());
+            } finally {
+                Files.deleteIfExists(tempFile);
+            }
         } catch (IOException e) {
             LOGGER.error("Error decoding image", e);
             return "Error decoding image";
@@ -70,16 +87,12 @@ public class PlateDetectionService {
     }
 
     private String detectPlateFromFile(File file) {
-        // Clear the segmented_chars directory
-        Utils.clearSegmentedCharsDirectory();
-
-        // Read the image file
         Mat src = Imgcodecs.imread(file.getAbsolutePath());
 
-        // Test multiple thresholds
-        int[] thresholds = {15, 10, 5, 0};
+        int[] thresholds = { 15, 10, 5, 0 };
         PlateDetectionResult bestResult = null;
         List<Rect> allDetectedPlates = new ArrayList<>();
+        List<Mat> bestSegmentedChars = new ArrayList<>();
 
         for (int threshold : thresholds) {
             Mat processedImage = imagePreprocessor.preprocessImage(src, threshold);
@@ -93,39 +106,62 @@ public class PlateDetectionService {
 
                 if (bestResult == null || charCount > bestResult.charCount()) {
                     bestResult = new PlateDetectionResult(plateRect, "", charCount, threshold, processedImage.clone());
-                    Utils.saveSegmentedChars(segmentedChars);
+                    bestSegmentedChars = new ArrayList<>(segmentedChars);
                 }
             }
         }
 
         if (bestResult != null) {
-            // Save the best processed image
-            Imgcodecs.imwrite("src/main/resources/best_thresh_image.bmp", bestResult.processedImage);
-
-            // Draw rectangles around the detected plate on the best threshold image
-            Mat bestThreshImageWithRectangles = bestResult.processedImage.clone();
-            Imgproc.rectangle(bestThreshImageWithRectangles, bestResult.rect(), new Scalar(0, 255, 0), 5); // Dickere Linie (5)
-            Imgcodecs.imwrite("src/main/resources/best_thresh_image_with_rectangles.bmp", bestThreshImageWithRectangles);
-
-            // Draw rectangles around all detected plates on the original image
-            Mat originalImageWithRectangles = src.clone();
-            for (Rect plate : allDetectedPlates) {
-                Imgproc.rectangle(originalImageWithRectangles, plate, new Scalar(0, 0, 255), 5); // Dickere Linie (5)
+            if (debugEnabled) {
+                saveDebugImages(src, bestResult, allDetectedPlates, bestSegmentedChars);
             }
-            Imgcodecs.imwrite("src/main/resources/all_detected_plates.bmp", originalImageWithRectangles);
-
-            // Draw rectangle around the best detected plate on the original image
-            Mat originalImageWithBestPlate = src.clone();
-            Imgproc.rectangle(originalImageWithBestPlate, bestResult.rect(), new Scalar(0, 255, 0), 5); // Dickere Linie (5)
-            Imgcodecs.imwrite("src/main/resources/best_detected_plate.bmp", originalImageWithBestPlate);
-
-            // Extract plate text
-            return characterRecognizer.extractPlateText();
+            return characterRecognizer.extractPlateText(bestSegmentedChars);
         }
 
         return "Not found";
     }
 
-    private record PlateDetectionResult(Rect rect, String filteredOcrResult, int charCount, int threshold, Mat processedImage) {
+    private void saveDebugImages(Mat src, PlateDetectionResult bestResult,
+            List<Rect> allDetectedPlates, List<Mat> segmentedChars) {
+        try {
+            Path debugPath = Path.of(debugDir);
+            Files.createDirectories(debugPath);
+
+            // Save best threshold image
+            Imgcodecs.imwrite(debugPath.resolve("best_thresh_image.bmp").toString(), bestResult.processedImage);
+
+            // Save with rectangles
+            Mat bestThreshWithRect = bestResult.processedImage.clone();
+            Imgproc.rectangle(bestThreshWithRect, bestResult.rect(), new Scalar(0, 255, 0), 5);
+            Imgcodecs.imwrite(debugPath.resolve("best_thresh_image_with_rectangles.bmp").toString(),
+                    bestThreshWithRect);
+
+            // Save all detected plates
+            Mat originalWithAllPlates = src.clone();
+            for (Rect plate : allDetectedPlates) {
+                Imgproc.rectangle(originalWithAllPlates, plate, new Scalar(0, 0, 255), 5);
+            }
+            Imgcodecs.imwrite(debugPath.resolve("all_detected_plates.bmp").toString(), originalWithAllPlates);
+
+            // Save best plate
+            Mat originalWithBest = src.clone();
+            Imgproc.rectangle(originalWithBest, bestResult.rect(), new Scalar(0, 255, 0), 5);
+            Imgcodecs.imwrite(debugPath.resolve("best_detected_plate.bmp").toString(), originalWithBest);
+
+            // Save segmented chars
+            Path charsDir = debugPath.resolve("segmented_chars");
+            Files.createDirectories(charsDir);
+            for (int i = 0; i < segmentedChars.size(); i++) {
+                Imgcodecs.imwrite(charsDir.resolve("char_" + i + ".png").toString(), segmentedChars.get(i));
+            }
+
+            LOGGER.debug("Debug images saved to {}", debugPath);
+        } catch (IOException e) {
+            LOGGER.warn("Failed to save debug images", e);
+        }
+    }
+
+    private record PlateDetectionResult(Rect rect, String filteredOcrResult, int charCount, int threshold,
+            Mat processedImage) {
     }
 }
