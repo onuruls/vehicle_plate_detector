@@ -190,12 +190,6 @@ CORS is configured in `WebConfig.java`. For production, update the allowed origi
 └── README.md
 ```
 
-## Security
-
-- No secrets are stored in this repository
-- The application does not require a database
-- See [SECURITY.md](SECURITY.md) for security policy
-
 ## Example Images
 
 Sample plate images for testing are available in the `examplePlates/` directory.
